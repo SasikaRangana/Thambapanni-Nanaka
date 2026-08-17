@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | තම්බපණ්ණි නාණක — Inventory Manager</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+Sinhala:wght@600;700;900&display=swap" rel="stylesheet">
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    body { background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+    .nav-link-btn {
+      text-decoration: none;
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--paper-line);
+      background: var(--paper);
+      cursor: pointer;
+      transition: all 0.25s var(--ease);
+      letter-spacing: 0.05em;
+    }
+    .nav-link-btn:hover {
+      background: var(--forest);
+      color: var(--gold-bright);
+      border-color: var(--forest);
+      transform: translateY(-2px);
+    }
+    .nav-link-btn.admin-link {
+      background: var(--forest);
+      border-color: var(--gold);
+      color: var(--gold-bright);
+    }
+    .nav-link-btn.admin-link:hover {
+      background: var(--gold);
+      color: var(--forest);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Top bar -->
+  <div class="admin-topbar">
+    <i class="fa-solid fa-shield-halved"></i>
+    Thambapanni Nanaka — Private Admin Control Suite &nbsp;|&nbsp; Restricted Access
+  </div>
+
+  <div class="site-wrapper">
+
+    <!-- Navbar -->
+    <header class="navbar" style="padding: 14px 0; border-bottom: 1px solid var(--paper-line); background: var(--paper-deep);">
+      <div class="container navbar-inner" style="display:flex; justify-content:space-between; align-items:center;">
+        <a href="admin.html" class="brand" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+          <img src="images/logo.jpg" alt="තම්බපණ්ණි නාණක" class="brand-logo-img" style="width:44px; height:44px; border-radius:8px; border:1.5px solid var(--gold);">
+          <div class="brand-text">
+            <strong class="brand-sinhala">තම්බපණ්ණි නාණක</strong>
+            <small style="color:var(--stamp); font-family:var(--font-mono); font-size:0.6rem; letter-spacing:0.12em;">ADMIN CONTROL SUITE</small>
+          </div>
+        </a>
+
+        <div class="nav-actions">
+          <a href="index.html" class="nav-link-btn" title="View Live Customer Storefront">
+            <i class="fa-solid fa-store"></i>
+            <span>Storefront</span>
+          </a>
+          <button class="nav-link-btn admin-link" id="adminSettingsBtn" title="Set Admin Secret Token">
+            <i class="fa-solid fa-key"></i>
+            <span>API Token</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Admin Body -->
+    <main class="admin-main">
+      <div class="container">
+
+        <!-- Section Header -->
+        <div class="admin-section-header">
+          <div>
+            <h1 class="section-title" style="font-style: italic;">
+              <span>Management Console</span>
+              Real-Time Inventory Overview
+            </h1>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              Manage currency items, update sold statuses and upload media assets.
+            </p>
+          </div>
+          <button class="btn-primary-gold" id="openAddItemModalBtn">
+            <i class="fa-solid fa-plus"></i> Add New Currency
+          </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="admin-stats-overview-grid">
+          <div class="admin-metric-card">
+            <div class="metric-label">Items Online (Active)</div>
+            <div class="metric-value metric-online" id="statOnlineCount">—</div>
+            <div class="metric-note">
+              <span class="pulse-dot" style="display:inline-block; vertical-align:middle; margin-right:5px;"></span>
+              Realtime Synced
+            </div>
+          </div>
+
+          <div class="admin-metric-card">
+            <div class="metric-label">Sold Items</div>
+            <div class="metric-value metric-sold" id="statSoldCount">—</div>
+            <div class="metric-note">Archived in Gallery</div>
+          </div>
+
+          <div class="admin-metric-card">
+            <div class="metric-label">Total Catalog Valuation</div>
+            <div class="metric-value" id="statTotalValuation" style="font-size:1.4rem;">LKR 0</div>
+            <div class="metric-note" style="color: var(--gold-primary);">Combined Inventory Worth</div>
+          </div>
+
+          <div class="admin-metric-card">
+            <div class="metric-label">Supabase &amp; Cloudinary</div>
+            <div class="metric-value" style="font-size:1.3rem; color: var(--badge-stock);">Active</div>
+            <div class="metric-note">FastAPI Engine Connected</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="filter-bar-card" style="margin-bottom: 24px;">
+          <div class="search-input-box" style="max-width:100%;">
+            <i class="fa-solid fa-magnifying-glass search-input-icon"></i>
+            <input type="text" id="adminSearchInput" placeholder="Search inventory by title, item code, country or year…">
+          </div>
+        </div>
+
+        <!-- Inventory Grid -->
+        <div class="admin-items-grid" id="adminItemsList">
+          <div style="text-align:center; padding:50px; color:var(--olive-primary); grid-column:1/-1;">
+            <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+            <p style="margin-top: 12px; font-family:var(--font-headline); font-style:italic; font-size:1rem;">
+              Loading inventory database…
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" style="padding: 22px 0;">
+      <div class="container footer-bottom-row">
+        <div>තම්බපණ්ණි නාණක (Thambapanni Nanaka) • Admin Management Engine</div>
+        <div>Protected with Token-based Authentication &amp; Supabase PostgreSQL</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Add / Edit Item Modal -->
+  <div class="modal-backdrop" id="itemFormModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="formModalTitle">Add New Currency Item</h3>
+        <button class="icon-btn" id="closeFormModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="currencyForm">
+        <input type="hidden" id="editItemId" value="">
+
+        <div class="form-group">
+          <label class="form-label">Item Title *</label>
+          <input type="text" id="formTitle" class="form-input" placeholder="e.g. Ceylon 1941 10 Rupee — Note" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Price (LKR) *</label>
+            <input type="number" id="formPrice" class="form-input" placeholder="85000" min="0" step="50" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Condition Grade *</label>
+            <input type="text" id="formGrade" class="form-input" placeholder="UNC, VF, Gem Uncirculated" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category (වර්ගය)</label>
+            <select id="formCategory" class="form-select">
+              <option value="banknote">💵 Banknote (මුදල් නෝට්ටු)</option>
+              <option value="coin">🪙 Coin (කාසි)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Minting / Issue Year *</label>
+            <input type="number" id="formYear" class="form-input" placeholder="1941" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Country of Origin *</label>
+            <input type="text" id="formCountry" class="form-input" placeholder="Ceylon (Sri Lanka)" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Item Code (SKU) *</label>
+            <input type="text" id="formItemCode" class="form-input" placeholder="CEY-1941-N10" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image Upload (Cloudinary) or Image URL *</label>
+          <div style="display:flex; gap:10px; margin-bottom:8px;">
+            <input type="file" id="formImageFile" accept="image/*" style="display:none;">
+            <button type="button" class="btn-secondary-outline" style="padding:9px 16px; font-size:0.8rem; white-space:nowrap;" id="chooseFileBtn">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Upload Image
+            </button>
+            <input type="url" id="formImageUrl" class="form-input" placeholder="https://res.cloudinary.com/…" required>
+          </div>
+          <div id="imageUploadStatus" style="font-size:0.78rem; display:none;"></div>
+          <div id="imagePreviewContainer" style="display:none; margin-top:10px; text-align:center;">
+            <img id="formImagePreview" src="" style="max-height:140px; border:1px solid var(--gold-border); border-radius:8px;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description / Historical Notes</label>
+          <textarea id="formDescription" class="form-textarea" rows="3" placeholder="Historical provenance, watermark details, signatures, serial numbers…"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary-gold" style="width:100%; margin-top:8px; justify-content:center;" id="saveItemBtn">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span id="saveBtnText">SAVE ITEM TO CATALOG</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Token Modal -->
+  <div class="modal-backdrop" id="tokenModal">
+    <div class="modal-content" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Admin Authentication Token</h3>
+        <button class="icon-btn" id="closeTokenModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Enter Secret Admin Key (Matches ADMIN_SECRET in .env)</label>
+        <input type="password" id="adminSecretInput" class="form-input" placeholder="Enter your secret admin token">
+      </div>
+      <button class="btn-primary-gold" style="width:100%; justify-content:center;" id="saveTokenBtn">
+        <i class="fa-solid fa-key"></i> Save Token
+      </button>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
