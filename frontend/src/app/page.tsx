@@ -15,9 +15,9 @@ import ItemDetailModal from "../components/ItemDetailModal";
 import Footer from "../components/Footer";
 import { ScrollProgressBar, BackToTop } from "../components/ScrollFeatures";
 
-import { CurrencyItem, CategoryType } from "../lib/types";
-import { fetchCurrencies } from "../lib/api";
-import { DEFAULT_CURRENCIES } from "../data/mockCurrencies";
+import { CurrencyItem, CategoryType } from "@/lib/types";
+import { fetchCurrencies } from "@/lib/api";
+import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 
 export default function StorefrontPage() {
   const [items, setItems] = useState<CurrencyItem[]>(DEFAULT_CURRENCIES);

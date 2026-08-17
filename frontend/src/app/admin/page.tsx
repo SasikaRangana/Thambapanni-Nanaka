@@ -24,9 +24,9 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { DEFAULT_CURRENCIES } from "../../data/mockCurrencies";
-import { CurrencyItem, getItemImages } from "../../lib/types";
-import { formatLKR } from "../../lib/api";
+import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
+import { CurrencyItem, getItemImages } from "@/lib/types";
+import { formatLKR } from "@/lib/api";
 
 const PRESET_TEMPLATES = [
   {
