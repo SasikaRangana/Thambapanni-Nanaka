@@ -15,8 +15,8 @@ import {
   Layers,
   Eye,
 } from "lucide-react";
-import { CurrencyItem, getItemImages } from "../lib/types";
-import { formatLKR, generateWhatsAppUrl } from "../lib/api";
+import { CurrencyItem, getItemImages } from "@/lib/types";
+import { formatLKR, generateWhatsAppUrl } from "@/lib/api";
 
 interface ItemDetailModalProps {
   item: CurrencyItem | null;

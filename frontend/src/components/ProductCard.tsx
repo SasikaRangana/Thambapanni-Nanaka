@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { MessageCircle, ZoomIn, ShieldCheck, Images, Layers } from "lucide-react";
-import { CurrencyItem, getItemImages } from "../lib/types";
-import { formatLKR } from "../lib/api";
+import { CurrencyItem, getItemImages } from "@/lib/types";
+import { formatLKR } from "@/lib/api";
 
 interface ProductCardProps {
   item: CurrencyItem;

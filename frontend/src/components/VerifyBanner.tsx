@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { ShieldCheck, Search, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
-import { verifyItemProvenance } from "../lib/api";
-import { CurrencyItem } from "../lib/types";
+import { verifyItemProvenance } from "@/lib/api";
+import { CurrencyItem } from "@/lib/types";
 import ScrollReveal from "./ScrollReveal";
 
 interface VerifyBannerProps {
