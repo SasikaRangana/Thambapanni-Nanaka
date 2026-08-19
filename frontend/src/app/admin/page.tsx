@@ -430,9 +430,17 @@ export default function AdminPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#d4af37]" />
-                <h1 className="font-serif text-2xl font-bold text-[#f8f6f0]">
+              <div className="flex items-center gap-2.5">
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden border border-[#d4af37]/60 shadow-md shrink-0">
+                  <Image
+                    src="/images/logo.jpg"
+                    alt="තම්බපණ්ණි නාණක Logo"
+                    fill
+                    sizes="32px"
+                    className="object-cover"
+                  />
+                </div>
+                <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#f8f6f0]">
                   Admin Vault &amp; Inventory Suite
                 </h1>
               </div>
@@ -442,7 +450,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <input
               type="password"
               placeholder="Admin API Secret Token"

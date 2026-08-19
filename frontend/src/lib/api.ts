@@ -46,7 +46,7 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
     }
 
     const res = await fetch(`${API_BASE}/currencies?${params.toString()}`, {
-      next: { revalidate: 30 },
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
 
@@ -132,7 +132,9 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
   if (!q) return null;
 
   try {
-    const res = await fetch(`${API_BASE}/currencies/${encodeURIComponent(q)}`);
+    const res = await fetch(`${API_BASE}/currencies/${encodeURIComponent(q)}`, {
+      cache: "no-store"
+    });
     if (res.ok) {
       const data = await res.json();
       if (data?.data) {

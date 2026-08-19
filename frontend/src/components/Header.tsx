@@ -150,13 +150,6 @@ export default function Header() {
             <span>WhatsApp</span>
           </a>
 
-          <Link
-            href="/admin"
-            className="text-xs px-3 py-1.5 rounded-lg border border-[#d4af37]/30 text-[#e5c158] hover:bg-[#d4af37]/10 transition-colors"
-          >
-            Admin
-          </Link>
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

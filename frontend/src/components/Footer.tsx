@@ -157,12 +157,6 @@ export default function Footer() {
                   <span>How Ordering Works</span>
                 </Link>
               </li>
-              <li>
-                <Link href="/admin" className="text-[#e5c158] hover:underline flex items-center gap-1.5 font-bold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#d4af37]" />
-                  <span>Admin Control Suite</span>
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -202,7 +196,7 @@ export default function Footer() {
         {/* Bottom Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[#8c8273]">
           <span>© 2026 තම්බපණ්ණි නාණක (Thambapanni Nanaka). All Rights Reserved.</span>
-          <span>All Valuations Quoted in Sri Lankan Rupees (LKR) · Next.js &amp; FastAPI</span>
+          <span>All Valuations Quoted in Sri Lankan Rupees (LKR)</span>
         </div>
       </div>
     </footer>

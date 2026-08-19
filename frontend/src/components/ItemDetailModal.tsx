@@ -46,6 +46,23 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
     setLoupePos({ x, y });
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    let x = ((touch.clientX - rect.left) / rect.width) * 100;
+    let y = ((touch.clientY - rect.top) / rect.height) * 100;
+    
+    if (x < 0 || x > 100 || y < 0 || y > 100) {
+      setLoupeActive(false);
+      return;
+    }
+    
+    setLoupeActive(true);
+    setLoupePos({ x, y });
+  };
+
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
@@ -75,10 +92,14 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
           <div className="lg:col-span-6 space-y-4">
             {/* Main Image Loupe Viewport */}
             <div
-              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#0c0a08] cursor-crosshair group shadow-inner"
+              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#0c0a08] cursor-crosshair group shadow-inner touch-none"
               onMouseEnter={() => setLoupeActive(true)}
               onMouseLeave={() => setLoupeActive(false)}
               onMouseMove={handleMouseMove}
+              onTouchStart={handleTouchMove}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={() => setLoupeActive(false)}
+              onTouchCancel={() => setLoupeActive(false)}
             >
               <Image
                 src={currentImage}
