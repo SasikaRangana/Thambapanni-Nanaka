@@ -57,70 +57,99 @@ export function saveLocalCurrencies(items: CurrencyItem[]): void {
   }
 }
 
+import { supabase } from "./supabase";
+
 export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): Promise<PaginatedResponse<CurrencyItem>> {
   try {
-    const params = new URLSearchParams();
+    let query = supabase.from("currencies").select("*");
+
     if (filters?.category && filters.category !== "all") {
-      params.append("category", filters.category);
+      query = query.ilike("category", filters.category);
     }
-    if (filters?.search) {
-      params.append("search", filters.search);
+    if (filters?.conditionGrade && filters.conditionGrade !== "all") {
+      query = query.ilike("condition_grade", `%${filters.conditionGrade}%`);
     }
-    if (filters?.minPrice !== undefined) {
-      params.append("min_price", String(filters.minPrice));
-    }
-    if (filters?.maxPrice !== undefined) {
-      params.append("max_price", String(filters.maxPrice));
-    }
-    if (filters?.conditionGrade) {
-      params.append("condition_grade", filters.conditionGrade);
+    if (filters?.search && filters.search.trim()) {
+      const s = filters.search.trim();
+      query = query.or(`title.ilike.%${s}%,item_code.ilike.%${s}%,description.ilike.%${s}%,country.ilike.%${s}%`);
     }
 
-    // Only attempt API fetch if API_BASE is configured to a remote server or running locally on localhost
-    const isLocalhostEnv = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-    const hasCustomApi = process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost");
+    if (filters?.sortBy === "price_asc") {
+      query = query.order("price", { ascending: true });
+    } else if (filters?.sortBy === "price_desc") {
+      query = query.order("price", { ascending: false });
+    } else if (filters?.sortBy === "year_asc") {
+      query = query.order("year", { ascending: true });
+    } else if (filters?.sortBy === "year_desc") {
+      query = query.order("year", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
 
-    if (isLocalhostEnv || hasCustomApi) {
-      const res = await fetch(`${API_BASE}/currencies?${params.toString()}`, {
-        cache: "no-store",
-        headers: { Accept: "application/json" },
+    const { data, error } = await query;
+
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const liveItems: CurrencyItem[] = data.map((row: any) => {
+        let parsedImages: string[] = [];
+        if (Array.isArray(row.images)) {
+          parsedImages = row.images;
+        } else if (typeof row.image_url === "string") {
+          try {
+            const parsed = JSON.parse(row.image_url);
+            if (Array.isArray(parsed)) parsedImages = parsed;
+            else parsedImages = [row.image_url];
+          } catch {
+            parsedImages = [row.image_url];
+          }
+        }
+
+        const primaryImg = parsedImages[0] || row.image_url || row.imageUrl || "/images/note_200_temple_tooth_1998.jpg";
+
+        const item: CurrencyItem = {
+          id: String(row.id),
+          title: row.title,
+          itemCode: row.item_code || row.itemCode || `SL-${row.year || 1980}`,
+          country: row.country || "Sri Lanka",
+          year: Number(row.year || 1980),
+          price: Number(row.price || 0),
+          category: row.category || "banknote",
+          condition_grade: row.condition_grade || "UNC (Uncirculated)",
+          is_sold: Boolean(row.is_sold),
+          imageUrl: primaryImg,
+          images: parsedImages.length > 0 ? parsedImages : [primaryImg],
+          description: row.description || "",
+          created_at: row.created_at,
+        };
+
+        return {
+          ...item,
+          whatsapp_inquiry_url: generateWhatsAppUrl(item),
+        };
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data.items) && data.items.length > 0) {
-          const enrichedApiItems = data.items.map((it: any) => ({
-            ...it,
-            imageUrl: it.imageUrl || it.image_url || "/images/note_200_temple_tooth_1998.jpg",
-            images: it.images || (it.imageUrl ? [it.imageUrl] : [it.image_url || "/images/note_200_temple_tooth_1998.jpg"]),
-            whatsapp_inquiry_url: generateWhatsAppUrl(it),
-          }));
+      // Save to local cache as backup
+      saveLocalCurrencies(liveItems);
 
-          // Cache latest API items to localStorage if available
-          saveLocalCurrencies(enrichedApiItems);
-
-          return {
-            items: enrichedApiItems,
-            pagination: data.pagination || {
-              total: enrichedApiItems.length,
-              page: 1,
-              limit: 20,
-              total_pages: 1,
-              has_next: false,
-              has_prev: false,
-            },
-          };
-        }
-      }
+      return {
+        items: liveItems,
+        pagination: {
+          total: liveItems.length,
+          page: 1,
+          limit: 100,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false,
+        },
+      };
     }
-
   } catch (err) {
-    // Backend API not reachable, fallback to persisted local/mock catalog
+    console.warn("Supabase fetch failed, using cached fallback:", err);
   }
 
   // Local fallback filtering from local storage cache or default dataset
   const baseItems = getLocalCurrencies();
   let filtered = [...baseItems];
+
 
   if (filters?.category && filters.category !== "all") {
     filtered = filtered.filter((it) => it.category === filters.category);

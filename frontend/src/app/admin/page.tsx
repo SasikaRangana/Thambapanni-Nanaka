@@ -27,6 +27,7 @@ import {
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR, fetchCurrencies, API_BASE, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 const PRESET_TEMPLATES = [
   {
@@ -291,38 +292,37 @@ export default function AdminPage() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const formPayload = new FormData();
-      formPayload.append("file", file);
+      let uploadedUrl = "";
 
+      // Try uploading to Cloudinary directly via public unsigned or local endpoint
       try {
-        const token = adminToken || DEFAULT_ADMIN_TOKEN;
-        const res = await fetch(`${API_BASE}/admin/upload-image`, {
+        const cloudFormData = new FormData();
+        cloudFormData.append("file", file);
+        cloudFormData.append("upload_preset", "ml_default"); // standard preset
+        cloudFormData.append("folder", "thambapanni_nanaka/currencies");
+
+        // 1. Try direct Cloudinary upload if cloud name is known
+        const cloudRes = await fetch("https://api.cloudinary.com/v1_1/iimn3f72/image/upload", {
           method: "POST",
-          headers: {
-            "X-Admin-Token": token,
-          },
-          body: formPayload,
+          body: cloudFormData,
         });
 
-        if (res.ok) {
-          const resData = await res.json();
-          const cloudUrl = resData?.data?.secure_url;
-          if (cloudUrl) {
-            uploadedUrls.push(cloudUrl);
-          } else {
-            const dataUrl = await readFileAsDataURL(file);
-            uploadedUrls.push(dataUrl);
+        if (cloudRes.ok) {
+          const cloudData = await cloudRes.json();
+          if (cloudData?.secure_url) {
+            uploadedUrl = cloudData.secure_url;
           }
-        } else {
-          const dataUrl = await readFileAsDataURL(file);
-          uploadedUrls.push(dataUrl);
         }
-      } catch (err) {
-        // Local preview fallback
-        const dataUrl = await readFileAsDataURL(file);
-        uploadedUrls.push(dataUrl);
+      } catch {}
+
+      // 2. Fallback to base64 DataURL (always works universally across all devices)
+      if (!uploadedUrl) {
+        uploadedUrl = await readFileAsDataURL(file);
       }
+
+      uploadedUrls.push(uploadedUrl);
     }
+
 
     setFormData((prev) => {
       const existing = prev.images.filter((img) => img !== "/images/note_200_temple_tooth_1998.jpg" || prev.title.includes("200"));
@@ -405,17 +405,10 @@ export default function AdminPage() {
     saveLocalCurrencies(updatedItems);
 
     try {
-      const token = adminToken || DEFAULT_ADMIN_TOKEN;
-      await fetch(`${API_BASE}/admin/currencies/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": token,
-        },
-        body: JSON.stringify({ is_sold: newStatus }),
-      });
+      // 1. Update in Supabase
+      await supabase.from("currencies").update({ is_sold: newStatus }).eq("id", id);
     } catch (err) {
-      console.warn("API status update fallback to local:", err);
+      console.warn("Supabase toggle fallback:", err);
     }
   };
 
@@ -426,15 +419,10 @@ export default function AdminPage() {
       saveLocalCurrencies(updatedItems);
 
       try {
-        const token = adminToken || DEFAULT_ADMIN_TOKEN;
-        await fetch(`${API_BASE}/admin/currencies/${id}`, {
-          method: "DELETE",
-          headers: {
-            "X-Admin-Token": token,
-          },
-        });
+        // 1. Delete in Supabase
+        await supabase.from("currencies").delete().eq("id", id);
       } catch (err) {
-        console.warn("API delete fallback to local:", err);
+        console.warn("Supabase delete fallback:", err);
       }
     }
   };
@@ -468,43 +456,49 @@ export default function AdminPage() {
     resetFormData();
 
     try {
-      const token = adminToken || DEFAULT_ADMIN_TOKEN;
-      const res = await fetch(`${API_BASE}/admin/currencies`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": token,
-        },
-        body: JSON.stringify({
+      // 1. Insert directly into Supabase Cloud Database
+      const { data, error } = await supabase.from("currencies").insert([
+        {
           title: newItem.title,
-          itemCode: newItem.itemCode,
+          item_code: newItem.itemCode,
           country: newItem.country,
           year: newItem.year,
           price: newItem.price,
           category: newItem.category,
           condition_grade: newItem.condition_grade,
-          imageUrl: newItem.imageUrl,
+          image_url: JSON.stringify(finalImages),
           description: newItem.description,
           is_sold: false,
-        }),
-      });
+        },
+      ]).select();
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.data) {
-          const apiItem: CurrencyItem = {
-            ...data.data,
-            images: finalImages,
-          };
-          const reconciled = [apiItem, ...items.filter((i) => i.id !== newItem.id)];
-          setItems(reconciled);
-          saveLocalCurrencies(reconciled);
-        }
+      if (!error && data && data.length > 0) {
+        const savedRow = data[0];
+        const apiItem: CurrencyItem = {
+          id: String(savedRow.id),
+          title: savedRow.title,
+          itemCode: savedRow.item_code || newItem.itemCode,
+          country: savedRow.country,
+          year: savedRow.year,
+          price: savedRow.price,
+          category: savedRow.category,
+          condition_grade: savedRow.condition_grade,
+          imageUrl: finalImages[0],
+          images: finalImages,
+          description: savedRow.description,
+          is_sold: savedRow.is_sold,
+          created_at: savedRow.created_at,
+        };
+
+        const reconciled = [apiItem, ...items.filter((i) => i.id !== newItem.id)];
+        setItems(reconciled);
+        saveLocalCurrencies(reconciled);
       }
     } catch (err) {
-      console.warn("Backend API sync offline fallback:", err);
+      console.warn("Supabase insert offline fallback:", err);
     }
   };
+
 
   const resetFormData = () => {
     setFormData({
