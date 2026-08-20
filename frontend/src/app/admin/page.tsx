@@ -405,10 +405,16 @@ export default function AdminPage() {
     saveLocalCurrencies(updatedItems);
 
     try {
-      // 1. Update in Supabase
+      // 1. Sync to API route
+      await fetch("/api/currencies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedItems),
+      });
+      // 2. Update in Supabase
       await supabase.from("currencies").update({ is_sold: newStatus }).eq("id", id);
     } catch (err) {
-      console.warn("Supabase toggle fallback:", err);
+      console.warn("Toggle sync fallback:", err);
     }
   };
 
@@ -419,10 +425,14 @@ export default function AdminPage() {
       saveLocalCurrencies(updatedItems);
 
       try {
-        // 1. Delete in Supabase
+        // 1. Sync to API route
+        await fetch(`/api/currencies?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        // 2. Delete in Supabase
         await supabase.from("currencies").delete().eq("id", id);
       } catch (err) {
-        console.warn("Supabase delete fallback:", err);
+        console.warn("Delete sync fallback:", err);
       }
     }
   };
@@ -456,7 +466,14 @@ export default function AdminPage() {
     resetFormData();
 
     try {
-      // 1. Insert directly into Supabase Cloud Database
+      // 1. Sync directly to Next.js API route
+      await fetch("/api/currencies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newItem),
+      });
+
+      // 2. Insert directly into Supabase Cloud Database
       const { data, error } = await supabase.from("currencies").insert([
         {
           title: newItem.title,
@@ -495,9 +512,10 @@ export default function AdminPage() {
         saveLocalCurrencies(reconciled);
       }
     } catch (err) {
-      console.warn("Supabase insert offline fallback:", err);
+      console.warn("Catalog sync fallback:", err);
     }
   };
+
 
 
   const resetFormData = () => {
