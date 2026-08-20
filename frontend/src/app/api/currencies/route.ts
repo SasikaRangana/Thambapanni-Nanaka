@@ -2,12 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { CurrencyItem } from "@/lib/types";
 
-// Server-side Supabase client using service role key (bypasses RLS)
-// These are server-only env vars (no NEXT_PUBLIC prefix) - safe to use here
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://rwatywlucdmakmmjcfjf.supabase.co";
+// IMPORTANT: Hardcoded correct Supabase project URL (rwatywlucdmakmmjcfjf)
+// Do NOT change to env var override — Vercel env may have a typo (rwatywlucdmakmmjcjfj which is WRONG)
+const SUPABASE_URL = "https://rwatywlucdmakmmjcfjf.supabase.co";
 
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
