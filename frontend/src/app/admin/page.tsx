@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Loader2,
   X,
+  Download,
 } from "lucide-react";
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
@@ -538,6 +539,39 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => {
+                // CSV Export
+                const headers = ["ID","Title","SKU","Country","Year","Price (LKR)","Category","Grade","Sold","Description","Primary Image","Created"];
+                const rows = items.map((it) => [
+                  it.id,
+                  `"${(it.title || "").replace(/"/g, '""')}"`,
+                  it.itemCode,
+                  it.country,
+                  it.year,
+                  it.price,
+                  it.category,
+                  it.condition_grade,
+                  it.is_sold ? "YES" : "NO",
+                  `"${(it.description || "").replace(/"/g, '""')}"`,
+                  (it.images && it.images[0]) || it.imageUrl || "",
+                  it.created_at || "",
+                ].join(","));
+                const csv = [headers.join(","), ...rows].join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `thambapanni_nanaka_catalog_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-[#1e1710] hover:bg-[#2a2016] border border-[#d4af37]/30 text-[#f3e5ab] font-semibold text-xs transition-colors flex items-center gap-1.5"
+              title="Export catalog to CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
             <button
               onClick={() => {
                 if (confirm("Are you sure you want to clear all catalog items? This will remove all items from the view.")) {

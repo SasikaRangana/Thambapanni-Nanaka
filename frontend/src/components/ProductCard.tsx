@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { MessageCircle, ZoomIn, ShieldCheck, Images, Layers } from "lucide-react";
+import { MessageCircle, ZoomIn, ShieldCheck, Images, Layers, Heart } from "lucide-react";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR } from "@/lib/api";
+import { useCurrency, formatConverted } from "@/lib/CurrencyContext";
+import { useWishlist } from "@/lib/WishlistContext";
 
 interface ProductCardProps {
   item: CurrencyItem;
@@ -15,6 +17,9 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
   const images = getItemImages(item);
   const primaryImage = images[0] || "/images/note_200_temple_tooth_1998.jpg";
   const [hoverIndex, setHoverIndex] = useState(0);
+  const { currency, convert, symbol, label } = useCurrency();
+  const { addItem, removeItem, isInWishlist } = useWishlist();
+  const wishlisted = isInWishlist(item.id);
 
   const displayImage = images[hoverIndex] || primaryImage;
 
@@ -64,6 +69,22 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
           </div>
         </div>
 
+        {/* Wishlist Heart Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            wishlisted ? removeItem(item.id) : addItem(item);
+          }}
+          className={`absolute bottom-3 right-3 z-20 p-2 rounded-full border transition-all shadow-lg ${
+            wishlisted
+              ? "bg-rose-600/90 border-rose-400 text-white scale-110"
+              : "bg-black/70 border-[#d4af37]/40 text-[#f3e5ab] hover:bg-rose-600/80 hover:border-rose-400 hover:text-white"
+          }`}
+          title={wishlisted ? "Remove from inquiry list" : "Add to inquiry list"}
+        >
+          <Heart className="w-3.5 h-3.5" fill={wishlisted ? "currentColor" : "none"} />
+        </button>
+
         {/* Loupe Hover Prompt */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px] z-20">
           <span className="px-4 py-2 rounded-full bg-[#1c1711] border border-[#d4af37] text-xs font-mono text-[#f3e5ab] flex items-center gap-2 shadow-xl">
@@ -108,6 +129,11 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
             <span className="font-serif text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f3e5ab] to-[#d4af37]">
               {formatLKR(item.price)}
             </span>
+            {currency !== "LKR" && (
+              <span className="text-[10px] font-mono text-[#b8af9e] block mt-0.5">
+                ≈ {formatConverted(convert(item.price), symbol, label)} {label}
+              </span>
+            )}
           </div>
 
           <a

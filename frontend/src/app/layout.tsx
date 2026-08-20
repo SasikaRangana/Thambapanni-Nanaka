@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Cinzel, Outfit, Noto_Serif } from "next/font/google";
 import "./globals.css";
+import { CurrencyProvider } from "@/lib/CurrencyContext";
+import { WishlistProvider } from "@/lib/WishlistContext";
 
 const cinzel = Cinzel({
   variable: "--font-cinzel",
@@ -40,8 +42,13 @@ export default function RootLayout({
       className={`${cinzel.variable} ${outfit.variable} ${notoSerif.variable} dark scroll-smooth`}
     >
       <body className="min-h-screen bg-[#0c0a08] text-[#f8f6f0] font-sans antialiased selection:bg-[#d4af37]/30 selection:text-[#f3e5ab]">
-        {children}
+        <CurrencyProvider>
+          <WishlistProvider>
+            {children}
+          </WishlistProvider>
+        </CurrencyProvider>
       </body>
     </html>
   );
 }
+

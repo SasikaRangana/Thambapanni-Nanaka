@@ -13,11 +13,21 @@ import Testimonials from "../components/Testimonials";
 import StatsBand from "../components/StatsBand";
 import ItemDetailModal from "../components/ItemDetailModal";
 import Footer from "../components/Footer";
+import PrefixDecoder from "../components/PrefixDecoder";
+import WishlistDrawer from "../components/WishlistDrawer";
 import { ScrollProgressBar, BackToTop } from "../components/ScrollFeatures";
+import { Heart } from "lucide-react";
 
 import { CurrencyItem, CategoryType } from "@/lib/types";
 import { fetchCurrencies, getLocalCurrencies } from "@/lib/api";
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
+import { useWishlist } from "@/lib/WishlistContext";
+import {
+  useCurrency,
+  CURRENCY_OPTIONS,
+  CURRENCY_FLAGS,
+  CurrencyCode,
+} from "@/lib/CurrencyContext";
 
 export default function StorefrontPage() {
   const [items, setItems] = useState<CurrencyItem[]>([]);
@@ -25,6 +35,12 @@ export default function StorefrontPage() {
   const [activeSeries, setActiveSeries] = useState<string>("");
   const [activeDetailItem, setActiveDetailItem] = useState<CurrencyItem | null>(null);
   const [loading, setLoading] = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [stockFilter, setStockFilter] = useState<"all" | "available" | "sold">("all");
+
+  const { count } = useWishlist();
+  const { currency, setCurrency } = useCurrency();
 
   const loadData = async (cat?: CategoryType, era?: string, search?: string, series?: string) => {
     setLoading(true);
@@ -61,6 +77,37 @@ export default function StorefrontPage() {
     };
   }, [selectedCategory, activeSeries]);
 
+  // Deep-link: auto-open modal if ?item=SKU in URL
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const itemParam = params.get("item");
+    if (!itemParam) return;
+
+    const tryOpen = () => {
+      const allItems = getLocalCurrencies();
+      const q = itemParam.toLowerCase().trim();
+      const found = allItems.find(
+        (it) =>
+          it.itemCode.toLowerCase() === q ||
+          it.id.toLowerCase() === q ||
+          it.title.toLowerCase().includes(q)
+      );
+      if (found) {
+        setActiveDetailItem(found);
+        // Scroll to collection
+        setTimeout(() => {
+          document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      }
+    };
+
+    // Try immediately and after data loads
+    tryOpen();
+    const timer = setTimeout(tryOpen, 1500);
+    return () => clearTimeout(timer);
+  }, [items]);
+
   const handleHeroSearch = (query: string, category: string, era: string) => {
     setActiveSeries("");
     setSelectedCategory(category as CategoryType);
@@ -78,6 +125,22 @@ export default function StorefrontPage() {
     loadData(selectedCategory, undefined, undefined, undefined);
   };
 
+  // Apply stock filter
+  const filteredByStock =
+    stockFilter === "all"
+      ? items
+      : stockFilter === "available"
+      ? items.filter((it) => !it.is_sold)
+      : items.filter((it) => it.is_sold);
+
+  // Clear URL param when modal closes
+  const handleCloseModal = () => {
+    setActiveDetailItem(null);
+    if (typeof window !== "undefined" && window.location.search.includes("item=")) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0c0a08] flex flex-col selection:bg-[#d4af37]/30 selection:text-[#f3e5ab] relative">
       {/* Gilded Top Scroll Progress Indicator */}
@@ -90,8 +153,66 @@ export default function StorefrontPage() {
         <Hero onSearch={handleHeroSearch} />
         <TrustPillars />
         <SeriesCarousel onSelectSeries={handleSelectSeries} />
+
+        {/* Stock Filter Toggle + Currency Selector — above catalog */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex flex-wrap items-center justify-between gap-3">
+          {/* Available / Sold Toggle */}
+          <div className="inline-flex items-center rounded-xl bg-[#14100c] border border-[#d4af37]/20 overflow-hidden">
+            {(["all", "available", "sold"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStockFilter(f)}
+                className={`px-4 py-2 text-xs font-mono font-semibold transition-colors ${
+                  stockFilter === f
+                    ? "bg-[#d4af37] text-[#0c0a08]"
+                    : "text-[#b8af9e] hover:text-[#f3e5ab]"
+                }`}
+              >
+                {f === "all" ? "All Items" : f === "available" ? "● Available" : "🏛️ Sold Archive"}
+              </button>
+            ))}
+          </div>
+
+          {/* Currency Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCurrencyPicker((v) => !v)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#14100c] border border-[#d4af37]/20 text-xs font-mono text-[#f3e5ab] hover:border-[#d4af37]/60 transition-colors"
+            >
+              <span>{CURRENCY_FLAGS[currency]}</span>
+              <span className="font-semibold">{currency}</span>
+              <svg className="w-3 h-3 text-[#6b6255]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showCurrencyPicker && (
+              <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-[#18140f] border border-[#d4af37]/30 shadow-xl z-50 overflow-hidden">
+                {CURRENCY_OPTIONS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      setCurrency(c);
+                      setShowCurrencyPicker(false);
+                    }}
+                    className={`w-full px-4 py-2.5 text-xs font-mono flex items-center gap-3 transition-colors ${
+                      currency === c
+                        ? "bg-[#d4af37]/15 text-[#f3e5ab] font-bold"
+                        : "text-[#b8af9e] hover:bg-[#1e1710] hover:text-[#f3e5ab]"
+                    }`}
+                  >
+                    <span className="text-base">{CURRENCY_FLAGS[c]}</span>
+                    <span>{c}</span>
+                    {currency === c && <span className="ml-auto text-[#d4af37]">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <CatalogGrid
-          items={items}
+          items={filteredByStock}
           selectedCategory={selectedCategory}
           activeSeries={activeSeries}
           onSelectCategory={(cat) => {
@@ -102,6 +223,7 @@ export default function StorefrontPage() {
           onOpenDetail={(item) => setActiveDetailItem(item)}
         />
         <VerifyBanner onOpenDetail={(item) => setActiveDetailItem(item)} />
+        <PrefixDecoder />
         <HowItWorks />
         <Testimonials />
         <StatsBand />
@@ -109,14 +231,39 @@ export default function StorefrontPage() {
 
       <Footer />
 
+      {/* Floating Wishlist Badge */}
+      <button
+        onClick={() => setWishlistOpen(true)}
+        className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-gradient-to-br from-[#1e1710] to-[#14100c] border border-[#d4af37]/40 shadow-2xl hover:border-[#d4af37] transition-all group"
+        title="Open inquiry list"
+      >
+        <Heart className="w-5 h-5 text-rose-400 group-hover:scale-110 transition-transform" fill={count > 0 ? "currentColor" : "none"} />
+        {count > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg">
+            {count}
+          </span>
+        )}
+      </button>
+
       {/* Floating Back to Top Action */}
       <BackToTop />
+
+      {/* Wishlist Drawer */}
+      <WishlistDrawer open={wishlistOpen} onClose={() => setWishlistOpen(false)} />
 
       {/* Global Detail & High-Res Loupe Inspection Modal */}
       <ItemDetailModal
         item={activeDetailItem}
-        onClose={() => setActiveDetailItem(null)}
+        onClose={handleCloseModal}
       />
+
+      {/* Close currency picker on outside click */}
+      {showCurrencyPicker && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowCurrencyPicker(false)}
+        />
+      )}
     </div>
   );
 }

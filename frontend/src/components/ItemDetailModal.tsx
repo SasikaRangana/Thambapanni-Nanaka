@@ -14,9 +14,14 @@ import {
   ChevronRight,
   Layers,
   Eye,
+  Link2,
+  Heart,
+  Check,
 } from "lucide-react";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR, generateWhatsAppUrl } from "@/lib/api";
+import { useCurrency, formatConverted } from "@/lib/CurrencyContext";
+import { useWishlist } from "@/lib/WishlistContext";
 
 interface ItemDetailModalProps {
   item: CurrencyItem | null;
@@ -27,6 +32,9 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
   const [loupeActive, setLoupeActive] = useState(false);
   const [loupePos, setLoupePos] = useState({ x: 50, y: 50 });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const { currency, convert, symbol, label } = useCurrency();
+  const { addItem, removeItem, isInWishlist } = useWishlist();
 
   // Reset active image index when item changes
   useEffect(() => {
@@ -78,14 +86,35 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#14100c] border border-[#d4af37]/40 shadow-2xl p-6 sm:p-8 text-[#f8f6f0]">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2.5 rounded-full bg-[#201912] border border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-[#0c0a08] transition-colors z-20"
-          aria-label="Close details"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Close & Share Buttons */}
+        <div className="absolute top-5 right-5 flex items-center gap-2 z-20">
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/?item=${encodeURIComponent(item.itemCode)}`;
+              navigator.clipboard.writeText(url).then(() => {
+                setLinkCopied(true);
+                // Update URL without reload
+                window.history.replaceState(null, "", `/?item=${encodeURIComponent(item.itemCode)}`);
+                setTimeout(() => setLinkCopied(false), 2000);
+              });
+            }}
+            className={`p-2.5 rounded-full border transition-colors ${
+              linkCopied
+                ? "bg-emerald-600 border-emerald-400 text-white"
+                : "bg-[#201912] border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-[#0c0a08]"
+            }`}
+            title="Copy direct link to this item"
+          >
+            {linkCopied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2.5 rounded-full bg-[#201912] border border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-[#0c0a08] transition-colors"
+            aria-label="Close details"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Interactive Loupe High-Res Image & Multi-Image Gallery */}
@@ -281,25 +310,51 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
             </div>
 
             {/* Price & Direct Purchase Action */}
-            <div className="pt-4 border-t border-[#d4af37]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-xs uppercase font-mono text-[#a69d8d] block">
-                  Catalog Price (Sri Lankan Rupees)
-                </span>
-                <span className="font-serif text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f3e5ab] via-[#d4af37] to-[#e5c158]">
-                  {formatLKR(item.price)}
-                </span>
+            <div className="pt-4 border-t border-[#d4af37]/20 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs uppercase font-mono text-[#a69d8d] block">
+                    Catalog Price (Sri Lankan Rupees)
+                  </span>
+                  <span className="font-serif text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f3e5ab] via-[#d4af37] to-[#e5c158]">
+                    {formatLKR(item.price)}
+                  </span>
+                  {currency !== "LKR" && (
+                    <span className="text-xs font-mono text-[#b8af9e] block mt-0.5">
+                      ≈ {formatConverted(convert(item.price), symbol, label)} {label}
+                    </span>
+                  )}
+                </div>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl hover:shadow-emerald-600/30 transition-all"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Order via WhatsApp</span>
+                </a>
               </div>
 
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl hover:shadow-emerald-600/30 transition-all"
+              {/* Wishlist / Inquiry List Button */}
+              <button
+                onClick={() => {
+                  if (isInWishlist(item.id)) {
+                    removeItem(item.id);
+                  } else {
+                    addItem(item);
+                  }
+                }}
+                className={`w-full py-3 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                  isInWishlist(item.id)
+                    ? "bg-rose-950/40 border-rose-600/40 text-rose-300 hover:bg-rose-900/50"
+                    : "bg-[#1e1710] border-[#d4af37]/30 text-[#f3e5ab] hover:border-[#d4af37]"
+                }`}
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>Order via WhatsApp</span>
-              </a>
+                <Heart className="w-4 h-4" fill={isInWishlist(item.id) ? "currentColor" : "none"} />
+                <span>{isInWishlist(item.id) ? "Remove from Inquiry List" : "Add to Inquiry List"}</span>
+              </button>
             </div>
           </div>
         </div>
