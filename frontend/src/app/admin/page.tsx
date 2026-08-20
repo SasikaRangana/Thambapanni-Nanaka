@@ -27,7 +27,6 @@ import {
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR, fetchCurrencies, API_BASE, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
-import { supabase } from "@/lib/supabase";
 
 const PRESET_TEMPLATES = [
   {
@@ -183,30 +182,28 @@ export default function AdminPage() {
   const [items, setItems] = useState<CurrencyItem[]>([]);
   const [adminToken, setAdminToken] = useState("");
 
-  // Load items from local storage first, then try API
+  // Load items: always fetch fresh from server (Supabase-backed API route)
   React.useEffect(() => {
-    // 1. Initial local load
-    const cached = getLocalCurrencies();
-    setItems(cached);
-
-    // 2. Load stored token if saved
+    // Load stored token if saved
     if (typeof window !== "undefined") {
       const savedToken = localStorage.getItem("thambapanni_admin_token") || DEFAULT_ADMIN_TOKEN;
       setAdminToken(savedToken);
     }
 
-    // 3. Fetch from API and merge intelligently
+    // Fetch from server route (Supabase) — authoritative source
     fetchCurrencies().then((res) => {
       if (res.items && res.items.length > 0) {
-        setItems((current) => {
-          // If local has items, keep all local items and merge any new API items
-          const existingIds = new Set(current.map((i) => i.id));
-          const newFromApi = res.items.filter((i) => !existingIds.has(i.id));
-          const merged = [...current, ...newFromApi];
-          saveLocalCurrencies(merged);
-          return merged;
-        });
+        setItems(res.items);
+        saveLocalCurrencies(res.items);
+      } else {
+        // Fallback to local cache only if server returns empty
+        const cached = getLocalCurrencies();
+        if (cached.length > 0) setItems(cached);
       }
+    }).catch(() => {
+      // Network failure: use local cache
+      const cached = getLocalCurrencies();
+      if (cached.length > 0) setItems(cached);
     });
   }, []);
 
@@ -406,23 +403,21 @@ export default function AdminPage() {
     const item = items.find((it) => it.id === id);
     if (!item) return;
     const newStatus = !item.is_sold;
-    
-    // Update local state and local storage immediately
+
+    // Optimistic update: update UI immediately
     const updatedItems = items.map((it) => (it.id === id ? { ...it, is_sold: newStatus } : it));
     setItems(updatedItems);
     saveLocalCurrencies(updatedItems);
 
     try {
-      // 1. Sync to API route
+      // Server route (Supabase-backed) handles the update
       await fetch("/api/currencies", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedItems),
+        body: JSON.stringify({ id, is_sold: newStatus }),
       });
-      // 2. Update in Supabase
-      await supabase.from("currencies").update({ is_sold: newStatus }).eq("id", id);
     } catch (err) {
-      console.warn("Toggle sync fallback:", err);
+      console.warn("Toggle sync error:", err);
     }
   };
 
@@ -433,14 +428,12 @@ export default function AdminPage() {
       saveLocalCurrencies(updatedItems);
 
       try {
-        // 1. Sync to API route
+        // Server route handles Supabase delete
         await fetch(`/api/currencies?id=${encodeURIComponent(id)}`, {
           method: "DELETE",
         });
-        // 2. Delete in Supabase
-        await supabase.from("currencies").delete().eq("id", id);
       } catch (err) {
-        console.warn("Delete sync fallback:", err);
+        console.warn("Delete sync error:", err);
       }
     }
   };
@@ -450,8 +443,9 @@ export default function AdminPage() {
     const finalSku = formData.itemCode.trim() || autoGenerateSku(formData.category, formData.country, formData.year, formData.title);
     const finalImages = formData.images.length > 0 ? formData.images : [formData.imageUrl || "/images/note_200_temple_tooth_1998.jpg"];
 
-    const newItem: CurrencyItem = {
-      id: "vault-" + Date.now(),
+    // Optimistic local item (temp id)
+    const tempItem: CurrencyItem = {
+      id: "temp-" + Date.now(),
       title: formData.title,
       itemCode: finalSku,
       country: formData.country,
@@ -466,61 +460,47 @@ export default function AdminPage() {
       created_at: new Date().toISOString(),
     };
 
-    // Save to state & local storage immediately
-    const updated = [newItem, ...items];
+    const updated = [tempItem, ...items];
     setItems(updated);
     saveLocalCurrencies(updated);
     setShowAddModal(false);
     resetFormData();
 
     try {
-      // 1. Sync directly to Next.js API route
-      await fetch("/api/currencies", {
+      // Server route handles Supabase insert & returns saved item with real ID
+      const res = await fetch("/api/currencies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newItem),
-      });
-
-      // 2. Insert directly into Supabase Cloud Database
-      const { data, error } = await supabase.from("currencies").insert([
-        {
-          title: newItem.title,
-          item_code: newItem.itemCode,
-          country: newItem.country,
-          year: newItem.year,
-          price: newItem.price,
-          category: newItem.category,
-          condition_grade: newItem.condition_grade,
-          image_url: JSON.stringify(finalImages),
-          description: newItem.description,
-          is_sold: false,
-        },
-      ]).select();
-
-      if (!error && data && data.length > 0) {
-        const savedRow = data[0];
-        const apiItem: CurrencyItem = {
-          id: String(savedRow.id),
-          title: savedRow.title,
-          itemCode: savedRow.item_code || newItem.itemCode,
-          country: savedRow.country,
-          year: savedRow.year,
-          price: savedRow.price,
-          category: savedRow.category,
-          condition_grade: savedRow.condition_grade,
+        body: JSON.stringify({
+          title: tempItem.title,
+          itemCode: tempItem.itemCode,
+          country: tempItem.country,
+          year: tempItem.year,
+          price: tempItem.price,
+          category: tempItem.category,
+          condition_grade: tempItem.condition_grade,
           imageUrl: finalImages[0],
           images: finalImages,
-          description: savedRow.description,
-          is_sold: savedRow.is_sold,
-          created_at: savedRow.created_at,
-        };
+          description: tempItem.description,
+          is_sold: false,
+        }),
+      });
 
-        const reconciled = [apiItem, ...items.filter((i) => i.id !== newItem.id)];
-        setItems(reconciled);
-        saveLocalCurrencies(reconciled);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.item) {
+          // Replace temp item with server-assigned real item
+          const realItem: CurrencyItem = {
+            ...json.item,
+            images: finalImages,
+            imageUrl: finalImages[0],
+          };
+          setItems((cur) => [realItem, ...cur.filter((i) => i.id !== tempItem.id)]);
+          saveLocalCurrencies([realItem, ...items]);
+        }
       }
     } catch (err) {
-      console.warn("Catalog sync fallback:", err);
+      console.warn("Create sync error:", err);
     }
   };
 

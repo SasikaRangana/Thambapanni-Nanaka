@@ -26,7 +26,6 @@ export function generateWhatsAppUrl(item: CurrencyItem): string {
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 }
 
-const LOCAL_STORAGE_KEY = "thambapanni_custom_currencies";
 const LOCAL_OVERRIDE_KEY = "thambapanni_currencies_override";
 
 export function getLocalCurrencies(): CurrencyItem[] {
@@ -35,7 +34,7 @@ export function getLocalCurrencies(): CurrencyItem[] {
     const saved = localStorage.getItem(LOCAL_OVERRIDE_KEY);
     if (saved !== null) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }
@@ -45,95 +44,53 @@ export function getLocalCurrencies(): CurrencyItem[] {
   return DEFAULT_CURRENCIES;
 }
 
-
 export function saveLocalCurrencies(items: CurrencyItem[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(LOCAL_OVERRIDE_KEY, JSON.stringify(items));
-    // Dispatch custom event so other tabs or components can react instantly
     window.dispatchEvent(new Event("thambapanni_catalog_updated"));
   } catch (e) {
     console.error("Error saving local currencies", e);
   }
 }
 
-import { supabase } from "./supabase";
-
+// ─── Fetch currencies: Always uses /api/currencies server route (Supabase-backed) ───
 export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): Promise<PaginatedResponse<CurrencyItem>> {
   try {
-    let query = supabase.from("currencies").select("*");
+    const params = new URLSearchParams();
+    if (filters?.category && filters.category !== "all") params.set("category", filters.category);
+    if (filters?.search && filters.search.trim()) params.set("search", filters.search.trim());
 
-    if (filters?.category && filters.category !== "all") {
-      query = query.ilike("category", filters.category);
-    }
-    if (filters?.conditionGrade && filters.conditionGrade !== "all") {
-      query = query.ilike("condition_grade", `%${filters.conditionGrade}%`);
-    }
-    if (filters?.search && filters.search.trim()) {
-      const s = filters.search.trim();
-      query = query.or(`title.ilike.%${s}%,item_code.ilike.%${s}%,description.ilike.%${s}%,country.ilike.%${s}%`);
-    }
+    const url = `/api/currencies${params.toString() ? "?" + params.toString() : ""}`;
+    const res = await fetch(url, { cache: "no-store" });
 
-    if (filters?.sortBy === "price_asc") {
-      query = query.order("price", { ascending: true });
-    } else if (filters?.sortBy === "price_desc") {
-      query = query.order("price", { ascending: false });
-    } else if (filters?.sortBy === "year_asc") {
-      query = query.order("year", { ascending: true });
-    } else if (filters?.sortBy === "year_desc") {
-      query = query.order("year", { ascending: false });
-    } else {
-      query = query.order("created_at", { ascending: false });
-    }
+    if (res.ok) {
+      const data = await res.json();
+      let items: CurrencyItem[] = (data.items || []).map((it: any) => ({
+        ...it,
+        images: it.images || (it.imageUrl ? [it.imageUrl] : ["/images/note_200_temple_tooth_1998.jpg"]),
+        whatsapp_inquiry_url: generateWhatsAppUrl(it),
+      }));
 
-    const { data, error } = await query;
+      // Apply client-side sorts (server route orders by created_at by default)
+      if (filters?.sortBy === "price_asc") items.sort((a, b) => a.price - b.price);
+      else if (filters?.sortBy === "price_desc") items.sort((a, b) => b.price - a.price);
+      else if (filters?.sortBy === "year_asc") items.sort((a, b) => a.year - b.year);
+      else if (filters?.sortBy === "year_desc") items.sort((a, b) => b.year - a.year);
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      const liveItems: CurrencyItem[] = data.map((row: any) => {
-        let parsedImages: string[] = [];
-        if (Array.isArray(row.images)) {
-          parsedImages = row.images;
-        } else if (typeof row.image_url === "string") {
-          try {
-            const parsed = JSON.parse(row.image_url);
-            if (Array.isArray(parsed)) parsedImages = parsed;
-            else parsedImages = [row.image_url];
-          } catch {
-            parsedImages = [row.image_url];
-          }
-        }
+      // condition grade filter (client-side)
+      if (filters?.conditionGrade && filters.conditionGrade !== "all") {
+        items = items.filter(it => it.condition_grade.toLowerCase().includes(filters.conditionGrade!.toLowerCase()));
+      }
 
-        const primaryImg = parsedImages[0] || row.image_url || row.imageUrl || "/images/note_200_temple_tooth_1998.jpg";
-
-        const item: CurrencyItem = {
-          id: String(row.id),
-          title: row.title,
-          itemCode: row.item_code || row.itemCode || `SL-${row.year || 1980}`,
-          country: row.country || "Sri Lanka",
-          year: Number(row.year || 1980),
-          price: Number(row.price || 0),
-          category: row.category || "banknote",
-          condition_grade: row.condition_grade || "UNC (Uncirculated)",
-          is_sold: Boolean(row.is_sold),
-          imageUrl: primaryImg,
-          images: parsedImages.length > 0 ? parsedImages : [primaryImg],
-          description: row.description || "",
-          created_at: row.created_at,
-        };
-
-        return {
-          ...item,
-          whatsapp_inquiry_url: generateWhatsAppUrl(item),
-        };
-      });
-
-      // Save to local cache as backup
-      saveLocalCurrencies(liveItems);
+      if (items.length > 0) {
+        saveLocalCurrencies(items);
+      }
 
       return {
-        items: liveItems,
+        items,
         pagination: {
-          total: liveItems.length,
+          total: items.length,
           page: 1,
           limit: 100,
           total_pages: 1,
@@ -143,51 +100,19 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
       };
     }
   } catch (err) {
-    console.warn("Supabase fetch failed, trying Next.js API route:", err);
+    console.warn("API route fetch failed, using local cache:", err);
   }
 
-  // 2. Next.js native API route fallback (Universal across all mobile & PC devices)
-  try {
-    const apiRes = await fetch("/api/currencies", { cache: "no-store" });
-    if (apiRes.ok) {
-      const apiData = await apiRes.json();
-      if (apiData && Array.isArray(apiData.items) && apiData.items.length > 0) {
-        return {
-          items: apiData.items.map((it: any) => ({
-            ...it,
-            whatsapp_inquiry_url: generateWhatsAppUrl(it),
-          })),
-          pagination: apiData.pagination || {
-            total: apiData.items.length,
-            page: 1,
-            limit: 100,
-            total_pages: 1,
-            has_next: false,
-            has_prev: false,
-          },
-        };
-      }
-    }
-  } catch {}
-
-  // 3. Local fallback filtering from local storage cache or default dataset
+  // Fallback: local storage cache
   const baseItems = getLocalCurrencies();
   let filtered = [...baseItems];
-
-
 
   if (filters?.category && filters.category !== "all") {
     filtered = filtered.filter((it) => it.category === filters.category);
   }
-
-  if (filters?.era && filters.era !== "all") {
-    filtered = filtered.filter((it) => it.era === filters.era);
-  }
-
   if (filters?.conditionGrade && filters.conditionGrade !== "all") {
     filtered = filtered.filter((it) => it.condition_grade.toLowerCase().includes(filters.conditionGrade!.toLowerCase()));
   }
-
   if (filters?.search && filters.search.trim()) {
     const q = filters.search.toLowerCase().trim();
     filtered = filtered.filter(
@@ -199,18 +124,10 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
         (it.description && it.description.toLowerCase().includes(q))
     );
   }
-
-  if (filters?.sortBy) {
-    if (filters.sortBy === "price_asc") {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (filters.sortBy === "price_desc") {
-      filtered.sort((a, b) => b.price - a.price);
-    } else if (filters.sortBy === "year_asc") {
-      filtered.sort((a, b) => a.year - b.year);
-    } else if (filters.sortBy === "year_desc") {
-      filtered.sort((a, b) => b.year - a.year);
-    }
-  }
+  if (filters?.sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);
+  else if (filters?.sortBy === "price_desc") filtered.sort((a, b) => b.price - a.price);
+  else if (filters?.sortBy === "year_asc") filtered.sort((a, b) => a.year - b.year);
+  else if (filters?.sortBy === "year_desc") filtered.sort((a, b) => b.year - a.year);
 
   const enriched = filtered.map((it) => ({
     ...it,
@@ -220,14 +137,7 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
 
   return {
     items: enriched,
-    pagination: {
-      total: enriched.length,
-      page: 1,
-      limit: 20,
-      total_pages: 1,
-      has_next: false,
-      has_prev: false,
-    },
+    pagination: { total: enriched.length, page: 1, limit: 100, total_pages: 1, has_next: false, has_prev: false },
   };
 }
 
@@ -236,9 +146,7 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
   if (!q) return null;
 
   try {
-    const res = await fetch(`${API_BASE}/currencies/${encodeURIComponent(q)}`, {
-      cache: "no-store"
-    });
+    const res = await fetch(`${API_BASE}/currencies/${encodeURIComponent(q)}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       if (data?.data) {
@@ -249,9 +157,7 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
         };
       }
     }
-  } catch (err) {
-    // fallback
-  }
+  } catch {}
 
   const catalog = getLocalCurrencies();
   const found = catalog.find(
@@ -264,4 +170,3 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
 
   return found ? { ...found, whatsapp_inquiry_url: generateWhatsAppUrl(found) } : null;
 }
-
