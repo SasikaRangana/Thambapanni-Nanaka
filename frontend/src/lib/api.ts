@@ -143,12 +143,37 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
       };
     }
   } catch (err) {
-    console.warn("Supabase fetch failed, using cached fallback:", err);
+    console.warn("Supabase fetch failed, trying Next.js API route:", err);
   }
 
-  // Local fallback filtering from local storage cache or default dataset
+  // 2. Next.js native API route fallback (Universal across all mobile & PC devices)
+  try {
+    const apiRes = await fetch("/api/currencies", { cache: "no-store" });
+    if (apiRes.ok) {
+      const apiData = await apiRes.json();
+      if (apiData && Array.isArray(apiData.items) && apiData.items.length > 0) {
+        return {
+          items: apiData.items.map((it: any) => ({
+            ...it,
+            whatsapp_inquiry_url: generateWhatsAppUrl(it),
+          })),
+          pagination: apiData.pagination || {
+            total: apiData.items.length,
+            page: 1,
+            limit: 100,
+            total_pages: 1,
+            has_next: false,
+            has_prev: false,
+          },
+        };
+      }
+    }
+  } catch {}
+
+  // 3. Local fallback filtering from local storage cache or default dataset
   const baseItems = getLocalCurrencies();
   let filtered = [...baseItems];
+
 
 
   if (filters?.category && filters.category !== "all") {
