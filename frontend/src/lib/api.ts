@@ -1,7 +1,7 @@
 import { CurrencyItem, PaginatedResponse, CurrencyFilterState } from "./types";
 import { DEFAULT_CURRENCIES, WHATSAPP_PHONE } from "../data/mockCurrencies";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export function formatLKR(amount: number): string {
   return "Rs. " + Number(amount).toLocaleString("en-LK", {
@@ -24,6 +24,36 @@ export function generateWhatsAppUrl(item: CurrencyItem): string {
   ].join("\n");
 
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+}
+
+const LOCAL_STORAGE_KEY = "thambapanni_custom_currencies";
+const LOCAL_OVERRIDE_KEY = "thambapanni_currencies_override";
+
+export function getLocalCurrencies(): CurrencyItem[] {
+  if (typeof window === "undefined") return DEFAULT_CURRENCIES;
+  try {
+    const saved = localStorage.getItem(LOCAL_OVERRIDE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Error loading cached currencies", e);
+  }
+  return DEFAULT_CURRENCIES;
+}
+
+export function saveLocalCurrencies(items: CurrencyItem[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LOCAL_OVERRIDE_KEY, JSON.stringify(items));
+    // Dispatch custom event so other tabs or components can react instantly
+    window.dispatchEvent(new Event("thambapanni_catalog_updated"));
+  } catch (e) {
+    console.error("Error saving local currencies", e);
+  }
 }
 
 export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): Promise<PaginatedResponse<CurrencyItem>> {
@@ -53,14 +83,20 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.items) && data.items.length > 0) {
+        const enrichedApiItems = data.items.map((it: any) => ({
+          ...it,
+          imageUrl: it.imageUrl || it.image_url || "/images/note_200_temple_tooth_1998.jpg",
+          images: it.images || (it.imageUrl ? [it.imageUrl] : [it.image_url || "/images/note_200_temple_tooth_1998.jpg"]),
+          whatsapp_inquiry_url: generateWhatsAppUrl(it),
+        }));
+
+        // Cache latest API items to localStorage if available
+        saveLocalCurrencies(enrichedApiItems);
+
         return {
-          items: data.items.map((it: any) => ({
-            ...it,
-            imageUrl: it.imageUrl || it.image_url || "/images/note_200_temple_tooth_1998.jpg",
-            whatsapp_inquiry_url: generateWhatsAppUrl(it),
-          })),
+          items: enrichedApiItems,
           pagination: data.pagination || {
-            total: data.items.length,
+            total: enrichedApiItems.length,
             page: 1,
             limit: 20,
             total_pages: 1,
@@ -71,11 +107,12 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
       }
     }
   } catch (err) {
-    console.warn("Backend API not reachable, using authentic local catalog data fallback.", err);
+    // Backend API not reachable, fallback to persisted local/mock catalog
   }
 
-  // Local fallback filtering
-  let filtered = [...DEFAULT_CURRENCIES];
+  // Local fallback filtering from local storage cache or default dataset
+  const baseItems = getLocalCurrencies();
+  let filtered = [...baseItems];
 
   if (filters?.category && filters.category !== "all") {
     filtered = filtered.filter((it) => it.category === filters.category);
@@ -83,6 +120,10 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
 
   if (filters?.era && filters.era !== "all") {
     filtered = filtered.filter((it) => it.era === filters.era);
+  }
+
+  if (filters?.conditionGrade && filters.conditionGrade !== "all") {
+    filtered = filtered.filter((it) => it.condition_grade.toLowerCase().includes(filters.conditionGrade!.toLowerCase()));
   }
 
   if (filters?.search && filters.search.trim()) {
@@ -111,6 +152,7 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
 
   const enriched = filtered.map((it) => ({
     ...it,
+    images: it.images || (it.imageUrl ? [it.imageUrl] : ["/images/note_200_temple_tooth_1998.jpg"]),
     whatsapp_inquiry_url: generateWhatsAppUrl(it),
   }));
 
@@ -140,6 +182,7 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
       if (data?.data) {
         return {
           ...data.data,
+          images: data.data.images || (data.data.imageUrl ? [data.data.imageUrl] : ["/images/note_200_temple_tooth_1998.jpg"]),
           whatsapp_inquiry_url: generateWhatsAppUrl(data.data),
         };
       }
@@ -148,7 +191,8 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
     // fallback
   }
 
-  const found = DEFAULT_CURRENCIES.find(
+  const catalog = getLocalCurrencies();
+  const found = catalog.find(
     (it) =>
       it.itemCode.toLowerCase() === q ||
       it.id.toLowerCase() === q ||
@@ -158,3 +202,4 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
 
   return found ? { ...found, whatsapp_inquiry_url: generateWhatsAppUrl(found) } : null;
 }
+

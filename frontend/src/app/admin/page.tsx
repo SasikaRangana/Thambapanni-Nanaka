@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
-import { formatLKR } from "@/lib/api";
+import { formatLKR, fetchCurrencies, API_BASE, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
 
 const PRESET_TEMPLATES = [
   {
@@ -176,9 +176,39 @@ const CONDITION_GRADES = [
   "Crisp UNC Set",
 ];
 
+const DEFAULT_ADMIN_TOKEN = "thambapanni_super_secret_admin_token_2026";
+
 export default function AdminPage() {
-  const [items, setItems] = useState<CurrencyItem[]>(DEFAULT_CURRENCIES);
+  const [items, setItems] = useState<CurrencyItem[]>([]);
   const [adminToken, setAdminToken] = useState("");
+
+  // Load items from local storage first, then try API
+  React.useEffect(() => {
+    // 1. Initial local load
+    const cached = getLocalCurrencies();
+    setItems(cached);
+
+    // 2. Load stored token if saved
+    if (typeof window !== "undefined") {
+      const savedToken = localStorage.getItem("thambapanni_admin_token") || DEFAULT_ADMIN_TOKEN;
+      setAdminToken(savedToken);
+    }
+
+    // 3. Fetch from API
+    fetchCurrencies().then((res) => {
+      if (res.items && res.items.length > 0) {
+        setItems(res.items);
+      }
+    });
+  }, []);
+
+  const handleTokenChange = (val: string) => {
+    setAdminToken(val);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("thambapanni_admin_token", val);
+    }
+  };
+
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -255,7 +285,7 @@ export default function AdminPage() {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    setUploadStatusMsg(`⏳ Uploading ${files.length} photo(s) to Cloudinary...`);
+    setUploadStatusMsg(`⏳ Uploading ${files.length} photo(s)...`);
 
     const uploadedUrls: string[] = [];
 
@@ -265,8 +295,8 @@ export default function AdminPage() {
       formPayload.append("file", file);
 
       try {
-        const token = adminToken || "thambapanni_super_secret_admin_token_2025";
-        const res = await fetch("http://localhost:8000/api/v1/admin/upload-image", {
+        const token = adminToken || DEFAULT_ADMIN_TOKEN;
+        const res = await fetch(`${API_BASE}/admin/upload-image`, {
           method: "POST",
           headers: {
             "X-Admin-Token": token,
@@ -280,24 +310,21 @@ export default function AdminPage() {
           if (cloudUrl) {
             uploadedUrls.push(cloudUrl);
           } else {
-            // Fallback to local DataURL
             const dataUrl = await readFileAsDataURL(file);
             uploadedUrls.push(dataUrl);
           }
         } else {
-          // Local fallback preview
           const dataUrl = await readFileAsDataURL(file);
           uploadedUrls.push(dataUrl);
         }
       } catch (err) {
-        // Backend not running / offline fallback
+        // Local preview fallback
         const dataUrl = await readFileAsDataURL(file);
         uploadedUrls.push(dataUrl);
       }
     }
 
     setFormData((prev) => {
-      // Filter out any default placeholder if adding first real images
       const existing = prev.images.filter((img) => img !== "/images/note_200_temple_tooth_1998.jpg" || prev.title.includes("200"));
       const combined = [...existing, ...uploadedUrls].slice(0, 8);
       return {
@@ -367,27 +394,58 @@ export default function AdminPage() {
   const totalValuation = items.reduce((acc, curr) => acc + curr.price, 0);
   const totalSold = items.filter((it) => it.is_sold).length;
 
-  const toggleSoldStatus = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, is_sold: !item.is_sold } : item
-      )
-    );
-  };
+  const toggleSoldStatus = async (id: string) => {
+    const item = items.find((it) => it.id === id);
+    if (!item) return;
+    const newStatus = !item.is_sold;
+    
+    // Update local state and local storage immediately
+    const updatedItems = items.map((it) => (it.id === id ? { ...it, is_sold: newStatus } : it));
+    setItems(updatedItems);
+    saveLocalCurrencies(updatedItems);
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to remove this item from the vault catalog?")) {
-      setItems((prev) => prev.filter((it) => it.id !== id));
+    try {
+      const token = adminToken || DEFAULT_ADMIN_TOKEN;
+      await fetch(`${API_BASE}/admin/currencies/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": token,
+        },
+        body: JSON.stringify({ is_sold: newStatus }),
+      });
+    } catch (err) {
+      console.warn("API status update fallback to local:", err);
     }
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to remove this item from the vault catalog?")) {
+      const updatedItems = items.filter((it) => it.id !== id);
+      setItems(updatedItems);
+      saveLocalCurrencies(updatedItems);
+
+      try {
+        const token = adminToken || DEFAULT_ADMIN_TOKEN;
+        await fetch(`${API_BASE}/admin/currencies/${id}`, {
+          method: "DELETE",
+          headers: {
+            "X-Admin-Token": token,
+          },
+        });
+      } catch (err) {
+        console.warn("API delete fallback to local:", err);
+      }
+    }
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalSku = formData.itemCode.trim() || autoGenerateSku(formData.category, formData.country, formData.year, formData.title);
     const finalImages = formData.images.length > 0 ? formData.images : [formData.imageUrl || "/images/note_200_temple_tooth_1998.jpg"];
 
     const newItem: CurrencyItem = {
-      id: `ta-${Date.now().toString().slice(-4)}`,
+      id: "vault-" + Date.now(),
       title: formData.title,
       itemCode: finalSku,
       country: formData.country,
@@ -399,10 +457,56 @@ export default function AdminPage() {
       images: finalImages,
       description: formData.description,
       is_sold: false,
+      created_at: new Date().toISOString(),
     };
 
-    setItems([newItem, ...items]);
+    // Save to state & local storage immediately
+    const updated = [newItem, ...items];
+    setItems(updated);
+    saveLocalCurrencies(updated);
     setShowAddModal(false);
+    resetFormData();
+
+    try {
+      const token = adminToken || DEFAULT_ADMIN_TOKEN;
+      const res = await fetch(`${API_BASE}/admin/currencies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": token,
+        },
+        body: JSON.stringify({
+          title: newItem.title,
+          itemCode: newItem.itemCode,
+          country: newItem.country,
+          year: newItem.year,
+          price: newItem.price,
+          category: newItem.category,
+          condition_grade: newItem.condition_grade,
+          imageUrl: newItem.imageUrl,
+          description: newItem.description,
+          is_sold: false,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.data) {
+          const apiItem: CurrencyItem = {
+            ...data.data,
+            images: finalImages,
+          };
+          const reconciled = [apiItem, ...items.filter((i) => i.id !== newItem.id)];
+          setItems(reconciled);
+          saveLocalCurrencies(reconciled);
+        }
+      }
+    } catch (err) {
+      console.warn("Backend API sync offline fallback:", err);
+    }
+  };
+
+  const resetFormData = () => {
     setFormData({
       title: "",
       itemCode: "",

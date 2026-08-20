@@ -38,6 +38,20 @@ export default function StorefrontPage() {
 
   useEffect(() => {
     loadData(selectedCategory);
+
+    const handleCatalogUpdate = () => {
+      loadData(selectedCategory);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("thambapanni_catalog_updated", handleCatalogUpdate);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("thambapanni_catalog_updated", handleCatalogUpdate);
+      }
+    };
   }, [selectedCategory]);
 
   const handleHeroSearch = (query: string, category: string, era: string) => {
