@@ -1,7 +1,7 @@
 import { CurrencyItem, PaginatedResponse, CurrencyFilterState } from "./types";
 import { DEFAULT_CURRENCIES, WHATSAPP_PHONE } from "../data/mockCurrencies";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+export const API_BASE = "";
 
 export function formatLKR(amount: number): string {
   return "Rs. " + Number(amount).toLocaleString("en-LK", {
@@ -163,14 +163,24 @@ export async function verifyItemProvenance(query: string): Promise<CurrencyItem 
   if (!q) return null;
 
   try {
-    const res = await fetch(`${API_BASE}/currencies/${encodeURIComponent(q)}`, { cache: "no-store" });
+    const res = await fetch(`/api/currencies?search=${encodeURIComponent(q)}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
-      if (data?.data) {
+      if (data?.items && data.items.length > 0) {
+        // Find exact or closest match
+        const match =
+          data.items.find(
+            (it: CurrencyItem) =>
+              it.itemCode.toLowerCase() === q ||
+              it.id.toLowerCase() === q ||
+              String(it.year) === q ||
+              it.title.toLowerCase().includes(q)
+          ) || data.items[0];
+
         return {
-          ...data.data,
-          images: data.data.images || (data.data.imageUrl ? [data.data.imageUrl] : ["/images/note_200_temple_tooth_1998.jpg"]),
-          whatsapp_inquiry_url: generateWhatsAppUrl(data.data),
+          ...match,
+          images: match.images || (match.imageUrl ? [match.imageUrl] : ["/images/note_200_temple_tooth_1998.jpg"]),
+          whatsapp_inquiry_url: generateWhatsAppUrl(match),
         };
       }
     }

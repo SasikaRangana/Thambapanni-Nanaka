@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
-import { formatLKR, fetchCurrencies, API_BASE, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
+import { formatLKR, fetchCurrencies, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
 import AdminLoginGate from "@/components/AdminLoginGate";
 
 const PRESET_TEMPLATES = [

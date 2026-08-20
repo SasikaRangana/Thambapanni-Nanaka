@@ -109,9 +109,11 @@ export default function AdminLoginGate({ children }: AdminLoginGateProps) {
     // Small artificial delay to prevent timing attacks
     await new Promise((r) => setTimeout(r, 400));
 
-    const inputHash = await sha256(password.trim());
-    const expectedHash =
-      process.env.NEXT_PUBLIC_ADMIN_PASSWORD_HASH || "";
+    const inputHash = (await sha256(password.trim())).toLowerCase().trim();
+    const envHash = (process.env.NEXT_PUBLIC_ADMIN_PASSWORD_HASH || "").trim().toLowerCase();
+    // Default fallback hash (thambapanni2026) if env variable is not loaded/configured
+    const defaultFallbackHash = "eeae177fd02fb88659d03b55f5a4d94ffe139cf5c7eb57e3265295e9bc889df8";
+    const expectedHash = envHash || defaultFallbackHash;
 
     if (inputHash === expectedHash) {
       saveSession();
