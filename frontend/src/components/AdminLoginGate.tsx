@@ -10,6 +10,7 @@ const MAX_ATTEMPTS = 3;
 const LOCKOUT_SECONDS = 30;
 
 async function sha256(text: string): Promise<string> {
+  
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);

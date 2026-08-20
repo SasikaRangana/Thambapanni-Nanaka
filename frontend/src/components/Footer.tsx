@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle, ShieldCheck, Send, ArrowRight } from "lucide-react";
+import { MessageCircle, ShieldCheck, Send, ArrowRight, Phone } from "lucide-react";
 import { WHATSAPP_PHONE, SOCIAL_LINKS } from "../data/mockCurrencies";
 import { FacebookIcon, InstagramIcon, TikTokIcon } from "./Header";
 
@@ -25,25 +25,34 @@ export default function Footer() {
   return (
     <footer id="contact" className="bg-[#090705] border-t border-[#d4af37]/25 text-[#f8f6f0] pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* WhatsApp Callout Banner */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#1c150e] via-[#241a10] to-[#1c150e] border border-[#d4af37]/35 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 mb-16">
-          <div className="space-y-1 text-center sm:text-left">
+        {/* Contact & WhatsApp Callout Banner */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#1c150e] via-[#241a10] to-[#1c150e] border border-[#d4af37]/35 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6 mb-16">
+          <div className="space-y-1 text-center lg:text-left">
             <h3 className="font-serif text-2xl font-bold text-[#f8f6f0]">
               Need Help Choosing or Valuing a Rare Note?
             </h3>
             <p className="text-xs sm:text-sm text-[#b8af9e]">
-              Our numismatic curators respond promptly on WhatsApp with high-resolution photos and provenance history.
+              Our numismatic curators respond promptly via Direct Call or WhatsApp with high-resolution photos and provenance history.
             </p>
           </div>
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all shadow-lg shrink-0"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Chat on WhatsApp</span>
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+            <a
+              href="tel:+94710679068"
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#14100c] border border-[#d4af37]/40 hover:border-[#d4af37] text-[#f3e5ab] text-sm font-semibold transition-all shadow-lg"
+            >
+              <Phone className="w-4 h-4 text-[#d4af37]" />
+              <span className="font-mono">+94 71 067 9068</span>
+            </a>
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all shadow-lg"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Chat on WhatsApp</span>
+            </a>
+          </div>
         </div>
 
         {/* 3 Column Grid */}
@@ -122,6 +131,14 @@ export default function Footer() {
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
                   <span>WhatsApp</span>
+                </a>
+
+                <a
+                  href="tel:+94710679068"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#18130e] border border-[#d4af37]/30 text-xs font-mono text-[#f8f6f0] hover:text-[#f3e5ab] hover:border-[#d4af37]/60 hover:bg-[#d4af37]/10 transition-all shadow-sm"
+                >
+                  <Phone className="w-3.5 h-3.5 text-[#d4af37]" />
+                  <span>071 067 9068</span>
                 </a>
               </div>
             </div>
