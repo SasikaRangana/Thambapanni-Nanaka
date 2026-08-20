@@ -21,6 +21,8 @@ export default function Hero({ onSearch }: HeroProps) {
   const ZOOM = 1.75;
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Only activate magnifying lens on hover-capable pointer devices (mouse/desktop)
+    if (e.pointerType === "touch") return;
     if (!heroArtRef.current) return;
     const rect = heroArtRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -39,22 +41,6 @@ export default function Hero({ onSearch }: HeroProps) {
     setLensActive(false);
   };
 
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!heroArtRef.current) return;
-    const rect = heroArtRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    if (!touch) return;
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-      setLensActive(false);
-      return;
-    }
-
-    setLensActive(true);
-    setLensPos({ x, y });
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,11 +126,7 @@ export default function Hero({ onSearch }: HeroProps) {
               ref={heroArtRef}
               onPointerMove={handlePointerMove}
               onPointerLeave={handlePointerLeave}
-              onTouchStart={handleTouchMove}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => setLensActive(false)}
-              onTouchCancel={() => setLensActive(false)}
-              className="hero-art-container relative w-full max-w-[500px] h-[360px] sm:h-[420px] cursor-crosshair group select-none touch-none"
+              className="hero-art-container relative w-full max-w-[500px] h-[360px] sm:h-[420px] md:cursor-crosshair group select-none"
             >
               {/* Floating Badge 1 (Top-Left): 100% Bank Authentication Seal */}
               <div className="absolute -top-3 -left-2 sm:-left-4 z-40 animate-float-slow pointer-events-none">

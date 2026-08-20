@@ -559,7 +559,7 @@ export default function AdminPage() {
               type="password"
               placeholder="Admin API Secret Token"
               value={adminToken}
-              onChange={(e) => setAdminToken(e.target.value)}
+              onChange={(e) => handleTokenChange(e.target.value)}
               className="px-3.5 py-2 rounded-xl bg-[#14100c] border border-[#d4af37]/30 text-xs text-[#f8f6f0] focus:outline-none focus:border-[#d4af37]"
             />
             <button

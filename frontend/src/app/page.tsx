@@ -16,11 +16,11 @@ import Footer from "../components/Footer";
 import { ScrollProgressBar, BackToTop } from "../components/ScrollFeatures";
 
 import { CurrencyItem, CategoryType } from "@/lib/types";
-import { fetchCurrencies } from "@/lib/api";
+import { fetchCurrencies, getLocalCurrencies } from "@/lib/api";
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 
 export default function StorefrontPage() {
-  const [items, setItems] = useState<CurrencyItem[]>(DEFAULT_CURRENCIES);
+  const [items, setItems] = useState<CurrencyItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
   const [activeDetailItem, setActiveDetailItem] = useState<CurrencyItem | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,11 @@ export default function StorefrontPage() {
   };
 
   useEffect(() => {
+    // 1. Instant local load on mount
+    const cached = getLocalCurrencies();
+    setItems(cached);
+
+    // 2. Fetch/filter
     loadData(selectedCategory);
 
     const handleCatalogUpdate = () => {

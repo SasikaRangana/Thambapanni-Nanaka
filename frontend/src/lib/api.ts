@@ -33,9 +33,9 @@ export function getLocalCurrencies(): CurrencyItem[] {
   if (typeof window === "undefined") return DEFAULT_CURRENCIES;
   try {
     const saved = localStorage.getItem(LOCAL_OVERRIDE_KEY);
-    if (saved) {
+    if (saved !== null) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -44,6 +44,7 @@ export function getLocalCurrencies(): CurrencyItem[] {
   }
   return DEFAULT_CURRENCIES;
 }
+
 
 export function saveLocalCurrencies(items: CurrencyItem[]): void {
   if (typeof window === "undefined") return;
@@ -75,37 +76,44 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
       params.append("condition_grade", filters.conditionGrade);
     }
 
-    const res = await fetch(`${API_BASE}/currencies?${params.toString()}`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
+    // Only attempt API fetch if API_BASE is configured to a remote server or running locally on localhost
+    const isLocalhostEnv = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    const hasCustomApi = process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes("localhost");
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data && Array.isArray(data.items) && data.items.length > 0) {
-        const enrichedApiItems = data.items.map((it: any) => ({
-          ...it,
-          imageUrl: it.imageUrl || it.image_url || "/images/note_200_temple_tooth_1998.jpg",
-          images: it.images || (it.imageUrl ? [it.imageUrl] : [it.image_url || "/images/note_200_temple_tooth_1998.jpg"]),
-          whatsapp_inquiry_url: generateWhatsAppUrl(it),
-        }));
+    if (isLocalhostEnv || hasCustomApi) {
+      const res = await fetch(`${API_BASE}/currencies?${params.toString()}`, {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
 
-        // Cache latest API items to localStorage if available
-        saveLocalCurrencies(enrichedApiItems);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          const enrichedApiItems = data.items.map((it: any) => ({
+            ...it,
+            imageUrl: it.imageUrl || it.image_url || "/images/note_200_temple_tooth_1998.jpg",
+            images: it.images || (it.imageUrl ? [it.imageUrl] : [it.image_url || "/images/note_200_temple_tooth_1998.jpg"]),
+            whatsapp_inquiry_url: generateWhatsAppUrl(it),
+          }));
 
-        return {
-          items: enrichedApiItems,
-          pagination: data.pagination || {
-            total: enrichedApiItems.length,
-            page: 1,
-            limit: 20,
-            total_pages: 1,
-            has_next: false,
-            has_prev: false,
-          },
-        };
+          // Cache latest API items to localStorage if available
+          saveLocalCurrencies(enrichedApiItems);
+
+          return {
+            items: enrichedApiItems,
+            pagination: data.pagination || {
+              total: enrichedApiItems.length,
+              page: 1,
+              limit: 20,
+              total_pages: 1,
+              has_next: false,
+              has_prev: false,
+            },
+          };
+        }
       }
     }
+
   } catch (err) {
     // Backend API not reachable, fallback to persisted local/mock catalog
   }
