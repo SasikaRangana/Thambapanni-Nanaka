@@ -161,94 +161,140 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Modal Popup with Backdrop */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#120f0c] border-b border-[#d4af37]/20 px-6 py-6 space-y-4 text-sm font-medium">
-          <Link
-            href="#home"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-white hover:text-[#d4af37]"
-          >
-            Home
-          </Link>
-          <Link
-            href="#collection"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-white hover:text-[#d4af37]"
-          >
-            All Items &amp; Catalog
-          </Link>
-          <Link
-            href="#series"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-white hover:text-[#d4af37]"
-          >
-            Eras &amp; Series
-          </Link>
-          <Link
-            href="#verify"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-[#e5c158] flex items-center gap-2"
-          >
-            <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
-            Verify Serial Number
-          </Link>
-          <Link
-            href="#how"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-white hover:text-[#d4af37]"
-          >
-            How Ordering Works
-          </Link>
-          <Link
-            href="#contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-white hover:text-[#d4af37]"
-          >
-            Contact &amp; Valuations
-          </Link>
+        <div className="fixed inset-0 z-50 md:hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          {/* Backdrop Click Area */}
+          <div 
+            className="absolute inset-0" 
+            onClick={() => setMobileMenuOpen(false)} 
+          />
 
-          {/* Mobile Social Links */}
-          <div className="pt-2 flex items-center justify-center gap-4 border-t border-white/10">
-            <a
-              href={SOCIAL_LINKS.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-full bg-[#1e1710] border border-[#d4af37]/30 text-white hover:text-[#1877f2]"
-              aria-label="Facebook"
-            >
-              <FacebookIcon className="w-4 h-4" />
-            </a>
-            <a
-              href={SOCIAL_LINKS.tiktok}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-full bg-[#1e1710] border border-[#d4af37]/30 text-white"
-              aria-label="TikTok"
-            >
-              <TikTokIcon className="w-4 h-4" />
-            </a>
-            <a
-              href={SOCIAL_LINKS.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 rounded-full bg-[#1e1710] border border-[#d4af37]/30 text-white hover:text-[#e4405f]"
-              aria-label="Instagram"
-            >
-              <InstagramIcon className="w-4 h-4" />
-            </a>
-          </div>
+          {/* Modal Container */}
+          <div className="relative w-full max-w-sm rounded-3xl bg-[#14100c]/98 border border-[#d4af37]/40 shadow-2xl p-5 text-sm font-medium z-10 animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#d4af37]/20">
+              <div className="flex items-center gap-2">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-[#d4af37]/60">
+                  <Image
+                    src="/images/logo.jpg"
+                    alt="Logo"
+                    fill
+                    sizes="28px"
+                    className="object-cover"
+                  />
+                </div>
+                <span className="font-serif font-bold text-[#f8f6f0] text-sm tracking-wide">
+                  තම්බපණ්ණි නාණක
+                </span>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-full bg-[#201912] border border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-[#0c0a08] transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-          <div className="pt-2">
-            <a
-              href={whatsappDirect}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold uppercase tracking-wider"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Direct WhatsApp Inquiry
-            </a>
+            {/* Compact Nav Items */}
+            <div className="flex flex-col space-y-0.5 py-1">
+              <Link
+                href="#home"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#d4cdbf] hover:text-[#f8f6f0] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs"
+              >
+                <span>Home (මුල් පිටුව)</span>
+                <span className="text-[10px] text-[#8c8273] font-mono">01</span>
+              </Link>
+              <Link
+                href="#collection"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#d4cdbf] hover:text-[#f8f6f0] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs"
+              >
+                <span>Catalog (නාමාවලිය)</span>
+                <span className="text-[10px] text-[#8c8273] font-mono">02</span>
+              </Link>
+              <Link
+                href="#series"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#d4cdbf] hover:text-[#f8f6f0] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs"
+              >
+                <span>Eras &amp; Series (යුග සහ කාණ්ඩ)</span>
+                <span className="text-[10px] text-[#8c8273] font-mono">03</span>
+              </Link>
+              <Link
+                href="#verify"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#e5c158] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs font-semibold"
+              >
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#d4af37]" />
+                  Verify Note
+                </span>
+                <span className="text-[10px] text-[#d4af37] font-mono">04</span>
+              </Link>
+              <Link
+                href="#how"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#d4cdbf] hover:text-[#f8f6f0] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs"
+              >
+                <span>How Ordering Works (ඇණවුම් කිරීම)</span>
+                <span className="text-[10px] text-[#8c8273] font-mono">05</span>
+              </Link>
+              <Link
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-[#d4cdbf] hover:text-[#f8f6f0] hover:bg-[#201912] transition-colors flex items-center justify-between text-xs"
+              >
+                <span>Contact &amp; Valuations (විමසීම්)</span>
+                <span className="text-[10px] text-[#8c8273] font-mono">06</span>
+              </Link>
+            </div>
+
+            {/* Social Media Section with Equalized Vertical Spacing */}
+            <div className="pt-3.5 pb-3.5 mt-1 border-t border-[#d4af37]/20 flex items-center justify-center gap-4">
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-[#1c1611] border border-[#d4af37]/30 text-[#d4cdbf] hover:text-[#1877f2] hover:border-[#1877f2]/50 hover:bg-[#1877f2]/10 transition-all shadow-sm"
+                aria-label="Facebook"
+              >
+                <FacebookIcon className="w-4 h-4" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-[#1c1611] border border-[#d4af37]/30 text-[#d4cdbf] hover:text-white hover:border-white/50 hover:bg-white/10 transition-all shadow-sm"
+                aria-label="TikTok"
+              >
+                <TikTokIcon className="w-4 h-4" />
+              </a>
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-[#1c1611] border border-[#d4af37]/30 text-[#d4cdbf] hover:text-[#e4405f] hover:border-[#e4405f]/50 hover:bg-[#e4405f]/10 transition-all shadow-sm"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* WhatsApp CTA Button */}
+            <div>
+              <a
+                href={whatsappDirect}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold uppercase tracking-wider transition-colors shadow-lg"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Direct WhatsApp Inquiry
+              </a>
+            </div>
           </div>
         </div>
       )}
