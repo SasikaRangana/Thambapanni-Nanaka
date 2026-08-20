@@ -92,14 +92,10 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
           <div className="lg:col-span-6 space-y-4">
             {/* Main Image Loupe Viewport */}
             <div
-              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#0c0a08] cursor-crosshair group shadow-inner touch-none"
+              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#0c0a08] md:cursor-crosshair group shadow-inner"
               onMouseEnter={() => setLoupeActive(true)}
               onMouseLeave={() => setLoupeActive(false)}
               onMouseMove={handleMouseMove}
-              onTouchStart={handleTouchMove}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => setLoupeActive(false)}
-              onTouchCancel={() => setLoupeActive(false)}
             >
               <Image
                 src={currentImage}

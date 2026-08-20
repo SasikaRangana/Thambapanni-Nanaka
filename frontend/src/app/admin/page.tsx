@@ -564,6 +564,30 @@ export default function AdminPage() {
             />
             <button
               onClick={() => {
+                if (confirm("Are you sure you want to clear all catalog items? This will remove all items from the view.")) {
+                  setItems([]);
+                  saveLocalCurrencies([]);
+                }
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-600/40 text-rose-300 font-semibold text-xs transition-colors"
+              title="Clear all catalog items"
+            >
+              Clear Catalog
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Reset to default 10 authentic catalog items?")) {
+                  setItems(DEFAULT_CURRENCIES);
+                  saveLocalCurrencies(DEFAULT_CURRENCIES);
+                }
+              }}
+              className="px-3.5 py-2.5 rounded-xl bg-[#1e1710] hover:bg-[#2a2016] border border-[#d4af37]/30 text-[#f3e5ab] font-semibold text-xs transition-colors"
+              title="Reset default template items"
+            >
+              Reset Defaults
+            </button>
+            <button
+              onClick={() => {
                 const initSku = autoGenerateSku("banknote", "Sri Lanka", 1980, "");
                 setFormData({
                   title: "",
