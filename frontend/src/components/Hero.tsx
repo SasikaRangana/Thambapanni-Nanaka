@@ -343,9 +343,13 @@ export default function Hero({ onSearch }: HeroProps) {
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#0e0c0a] border border-[#d4af37]/30 text-sm text-[#f8f6f0] focus:border-[#d4af37] focus:outline-none"
             >
               <option value="all">All Eras (සියලු යුග)</option>
-              <option value="ancient">Ancient Kingdoms (Anuradhapura / Polonnaruwa)</option>
-              <option value="colonial">British Ceylon (1802 – 1948)</option>
-              <option value="modern">Post-Independence &amp; Modern</option>
+              <option value="ancient">🏛️ Ancient Kingdoms (ක්‍රි.පූ. 300 – 1505)</option>
+              <option value="dutch">⛵ Portuguese &amp; Dutch VOC (1505 – 1796)</option>
+              <option value="british_ceylon">👑 British Ceylon Era (1796 – 1948)</option>
+              <option value="dominion">🇱🇰 Early Ceylon &amp; Republic (1948 – 1977)</option>
+              <option value="flora_fauna">🌿 Flora &amp; Fauna / History Series (1978 – 1990)</option>
+              <option value="modern_heritage">✨ Sri Lankan Heritage &amp; Modern (1991 – Present)</option>
+              <option value="commemorative">🎖️ Commemorative &amp; Special Issues</option>
             </select>
           </div>
 

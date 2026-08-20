@@ -1,5 +1,16 @@
 export type CategoryType = "all" | "banknote" | "coin" | "token" | "medal";
-export type EraType = "all" | "ancient" | "colonial" | "modern";
+export type EraType =
+  | "all"
+  | "ancient"
+  | "dutch"
+  | "colonial"
+  | "british_ceylon"
+  | "dominion"
+  | "flora_fauna"
+  | "modern"
+  | "modern_heritage"
+  | "commemorative"
+  | string;
 
 export interface CurrencyItem {
   id: string;

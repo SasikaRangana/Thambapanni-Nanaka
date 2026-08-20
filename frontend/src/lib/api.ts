@@ -134,6 +134,36 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
         (it.description && it.description.toLowerCase().includes(q))
     );
   }
+  if (filters?.era && filters.era !== "all") {
+    const e = filters.era.toLowerCase();
+    filtered = filtered.filter((it) => {
+      const yr = it.year || 0;
+      const t = (it.title + " " + it.country + " " + (it.description || "")).toLowerCase();
+
+      if (e === "ancient") {
+        return yr < 1505 || t.includes("ancient") || t.includes("kahavanu") || t.includes("massa") || t.includes("polonnaruwa") || t.includes("anuradhapura") || t.includes("kotte");
+      }
+      if (e === "dutch") {
+        return (yr >= 1505 && yr < 1796) || t.includes("dutch") || t.includes("voc") || t.includes("stuiver") || t.includes("duit") || t.includes("portuguese");
+      }
+      if (e === "colonial" || e === "british_ceylon") {
+        return (yr >= 1796 && yr <= 1948) || t.includes("british") || t.includes("george") || t.includes("victoria") || t.includes("emergency") || t.includes("wwii");
+      }
+      if (e === "dominion") {
+        return (yr > 1948 && yr <= 1977) || t.includes("1952") || t.includes("1954") || t.includes("elizabeth") || t.includes("armorial") || t.includes("bandaranayake") || t.includes("parakrama");
+      }
+      if (e === "flora_fauna") {
+        return (yr >= 1978 && yr <= 1990) || t.includes("flora") || t.includes("fauna") || t.includes("1979") || t.includes("1982") || t.includes("archaeological") || t.includes("butterfly") || t.includes("skink");
+      }
+      if (e === "modern" || e === "modern_heritage") {
+        return yr >= 1991 || t.includes("heritage") || t.includes("200") || t.includes("temple") || t.includes("dancer") || t.includes("prosperity");
+      }
+      if (e === "commemorative") {
+        return it.category === "token" || it.category === "medal" || t.includes("commemorative") || t.includes("independence") || t.includes("anniversary") || t.includes("reproduction");
+      }
+      return true;
+    });
+  }
   if (filters?.series && filters.series !== "all") {
     const s = filters.series.toLowerCase();
     filtered = filtered.filter((it) =>
