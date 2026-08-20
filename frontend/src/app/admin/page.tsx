@@ -195,13 +195,21 @@ export default function AdminPage() {
       setAdminToken(savedToken);
     }
 
-    // 3. Fetch from API
+    // 3. Fetch from API and merge intelligently
     fetchCurrencies().then((res) => {
       if (res.items && res.items.length > 0) {
-        setItems(res.items);
+        setItems((current) => {
+          // If local has items, keep all local items and merge any new API items
+          const existingIds = new Set(current.map((i) => i.id));
+          const newFromApi = res.items.filter((i) => !existingIds.has(i.id));
+          const merged = [...current, ...newFromApi];
+          saveLocalCurrencies(merged);
+          return merged;
+        });
       }
     });
   }, []);
+
 
   const handleTokenChange = (val: string) => {
     setAdminToken(val);
