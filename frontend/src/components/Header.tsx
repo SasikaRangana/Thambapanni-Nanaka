@@ -73,8 +73,8 @@ export default function Header() {
             <span className="font-serif text-xl sm:text-2xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#f3e5ab] via-[#d4af37] to-[#e5c158]">
               තම්බපණ්ණි නාණක
             </span>
-            <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#b8af9e] font-medium font-mono">
-              Thambapanni Nanaka · Curated Archive
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-[#b8af9e] font-medium font-mono">
+              The Hobby of Heaven
             </span>
           </div>
         </Link>
