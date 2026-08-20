@@ -264,14 +264,14 @@ export default function CatalogGrid({
         )}
       </div>
 
-      {/* Mobile-Friendly Currency Selector Bottom Sheet / Modal */}
+      {/* Centered Currency Selector Modal */}
       {showCurrencyModal && (
         <div
-          className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
           onClick={() => setShowCurrencyModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#14100c] border border-[#d4af37]/40 p-6 shadow-2xl space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-4 duration-200"
+            className="w-full max-w-md rounded-3xl bg-[#14100c] border border-[#d4af37]/40 p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
