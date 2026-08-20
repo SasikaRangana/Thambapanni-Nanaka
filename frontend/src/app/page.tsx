@@ -116,6 +116,31 @@ export default function StorefrontPage() {
     loadData(selectedCategory, undefined, undefined, undefined);
   };
 
+  // Intercept Mobile Back Button (Swipe back / Hardware back button) to close open modals
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isAnyModalOpen = Boolean(activeDetailItem || wishlistOpen || showGradingGuide);
+
+    if (isAnyModalOpen) {
+      window.history.pushState({ tn_modal_open: true }, "");
+    }
+
+    const handlePopState = () => {
+      setActiveDetailItem(null);
+      setWishlistOpen(false);
+      setShowGradingGuide(false);
+      if (window.location.search.includes("item=")) {
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [activeDetailItem, wishlistOpen, showGradingGuide]);
+
   // Clear URL param when modal closes
   const handleCloseModal = () => {
     setActiveDetailItem(null);

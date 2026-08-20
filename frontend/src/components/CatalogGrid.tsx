@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Sparkles, SlidersHorizontal, ArrowUpDown, X, Award, ChevronDown, Check } from "lucide-react";
 import { CurrencyItem, CategoryType } from "../lib/types";
 import ProductCard from "./ProductCard";
@@ -48,6 +48,22 @@ export default function CatalogGrid({
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   const { currency, setCurrency } = useCurrency();
+
+  // Intercept Mobile Back Button for Currency Modal
+  useEffect(() => {
+    if (typeof window === "undefined" || !showCurrencyModal) return;
+
+    window.history.pushState({ tn_currency_modal: true }, "");
+
+    const handlePopState = () => {
+      setShowCurrencyModal(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [showCurrencyModal]);
 
   const filteredItems = useMemo(() => {
     let result = [...items];

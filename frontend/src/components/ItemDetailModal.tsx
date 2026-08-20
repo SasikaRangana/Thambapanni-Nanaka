@@ -48,6 +48,22 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
     setLoupeActive(false);
   }, [item?.id]);
 
+  // Intercept Mobile Back Button when Fullscreen Lightbox is open
+  useEffect(() => {
+    if (typeof window === "undefined" || !isFullscreen) return;
+
+    window.history.pushState({ tn_fullscreen: true }, "");
+
+    const handlePopState = () => {
+      setIsFullscreen(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isFullscreen]);
+
   if (!item) return null;
 
   const images = getItemImages(item);
