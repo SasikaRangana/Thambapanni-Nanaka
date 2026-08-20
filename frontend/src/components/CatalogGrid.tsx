@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Sparkles, SlidersHorizontal, ArrowUpDown, X, Award, ChevronDown } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Sparkles, SlidersHorizontal, ArrowUpDown, X, Award, ChevronDown, Check } from "lucide-react";
 import { CurrencyItem, CategoryType } from "../lib/types";
 import ProductCard from "./ProductCard";
 import ScrollReveal from "./ScrollReveal";
@@ -24,6 +24,14 @@ interface CatalogGridProps {
   onOpenGradingGuide: () => void;
 }
 
+const CURRENCY_NAMES: Record<CurrencyCode, { name: string; symbol: string }> = {
+  LKR: { name: "Sri Lankan Rupee (ශ්‍රී ලංකා රුපියල්)", symbol: "Rs." },
+  USD: { name: "United States Dollar", symbol: "$" },
+  GBP: { name: "British Pound Sterling", symbol: "£" },
+  EUR: { name: "European Union Euro", symbol: "€" },
+  AUD: { name: "Australian Dollar", symbol: "A$" },
+};
+
 export default function CatalogGrid({
   items,
   selectedCategory,
@@ -37,28 +45,9 @@ export default function CatalogGrid({
 }: CatalogGridProps) {
   const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "year_desc" | "year_asc">("default");
   const [gradeFilter, setGradeFilter] = useState("all");
-  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   const { currency, setCurrency } = useCurrency();
-  const currencyPickerRef = useRef<HTMLDivElement>(null);
-
-  // Click-outside listener for Currency Picker
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        currencyPickerRef.current &&
-        !currencyPickerRef.current.contains(event.target as Node)
-      ) {
-        setShowCurrencyPicker(false);
-      }
-    };
-    if (showCurrencyPicker) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showCurrencyPicker]);
 
   const filteredItems = useMemo(() => {
     let result = [...items];
@@ -90,87 +79,89 @@ export default function CatalogGrid({
   }, [items, stockFilter, gradeFilter, sortBy]);
 
   return (
-    <section id="collection" className="py-12 sm:py-16 bg-[#0c0a08] relative">
+    <section id="collection" className="py-10 sm:py-16 bg-[#0c0a08] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header & Main Category Tabs */}
+        {/* Section Header */}
         <ScrollReveal variant="up">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-[#d4af37]/20">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#d4af37]">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Hand-Catalogued Numismatic Archive</span>
-              </div>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#f8f6f0] mt-1">
-                Verified Historical Collection
-              </h2>
-              {activeSeries && activeSeries !== "all" ? (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-[#f3e5ab] font-mono bg-[#d4af37]/15 border border-[#d4af37]/40 px-3 py-1 rounded-full">
-                    Series: {activeSeries}
-                  </span>
-                  <button
-                    onClick={onClearSeries}
-                    className="text-[#a69d8d] hover:text-[#d4af37] transition-colors"
-                    title="Clear series filter"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs sm:text-sm text-[#b8af9e] mt-1 font-mono">
-                  Displaying {filteredItems.length} authenticated Ceylon banknotes &amp; ancient coins
-                </p>
-              )}
+          <div className="space-y-3 pb-6 border-b border-[#d4af37]/20">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#d4af37]">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Hand-Catalogued Numismatic Archive</span>
             </div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#f8f6f0]">
+                  Verified Historical Collection
+                </h2>
+                {activeSeries && activeSeries !== "all" ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-[#f3e5ab] font-mono bg-[#d4af37]/15 border border-[#d4af37]/40 px-3 py-1 rounded-full">
+                      Series: {activeSeries}
+                    </span>
+                    <button
+                      onClick={onClearSeries}
+                      className="text-[#a69d8d] hover:text-[#d4af37] transition-colors"
+                      title="Clear series filter"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs sm:text-sm text-[#b8af9e] mt-1 font-mono">
+                    Displaying {filteredItems.length} authenticated Ceylon banknotes &amp; ancient coins
+                  </p>
+                )}
+              </div>
 
-            {/* Category Filter Pills (Banknote, Coin, All) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-              <button
-                onClick={() => onSelectCategory("all")}
-                className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === "all"
-                    ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
-                    : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60"
-                }`}
-              >
-                All Collectibles
-              </button>
-              <button
-                onClick={() => onSelectCategory("banknote")}
-                className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === "banknote"
-                    ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
-                    : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60"
-                }`}
-              >
-                💵 Banknotes (නෝට්ටු)
-              </button>
-              <button
-                onClick={() => onSelectCategory("coin")}
-                className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedCategory === "coin"
-                    ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
-                    : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60"
-                }`}
-              >
-                🪙 Coins (කාසි)
-              </button>
+              {/* Category Pills (Banknote, Coin, All) */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button
+                  onClick={() => onSelectCategory("all")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
+                    selectedCategory === "all"
+                      ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
+                      : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
+                  }`}
+                >
+                  All Collectibles
+                </button>
+                <button
+                  onClick={() => onSelectCategory("banknote")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
+                    selectedCategory === "banknote"
+                      ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
+                      : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
+                  }`}
+                >
+                  💵 Banknotes (නෝට්ටු)
+                </button>
+                <button
+                  onClick={() => onSelectCategory("coin")}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
+                    selectedCategory === "coin"
+                      ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
+                      : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
+                  }`}
+                >
+                  🪙 Coins (කාසි)
+                </button>
+              </div>
             </div>
           </div>
         </ScrollReveal>
 
-        {/* Unified Luxury Control Bar — Stock Status, Sort, Grades, & Currency */}
+        {/* Mobile & Desktop Responsive Controls Card */}
         <ScrollReveal variant="up" delay={50}>
-          <div className="my-6 p-2.5 sm:p-3 rounded-2xl bg-[#14100c] border border-[#d4af37]/25 shadow-xl relative z-30 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
-            {/* Left: Stock Status Segmented Switcher */}
-            <div className="flex items-center rounded-xl bg-[#0a0806] border border-[#d4af37]/20 p-1 w-full md:w-auto">
+          <div className="my-5 p-3 rounded-2xl bg-[#14100c] border border-[#d4af37]/25 shadow-xl space-y-3">
+            {/* Top Row: Stock Status Segmented Bar (Full width on mobile) */}
+            <div className="flex items-center rounded-xl bg-[#0a0806] border border-[#d4af37]/20 p-1 w-full">
               {(["all", "available", "sold"] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => onSelectStockFilter(f)}
-                  className={`flex-1 md:flex-none px-3 sm:px-4 py-1.5 rounded-lg font-semibold transition-all text-center whitespace-nowrap ${
+                  className={`flex-1 py-2 sm:py-1.5 px-2 rounded-lg text-xs font-mono font-semibold transition-all text-center whitespace-nowrap min-h-[38px] flex items-center justify-center ${
                     stockFilter === f
-                      ? "bg-[#d4af37] text-[#0c0a08] shadow-sm font-bold"
+                      ? "bg-[#d4af37] text-[#0c0a08] shadow-md font-bold"
                       : "text-[#a69d8d] hover:text-[#f3e5ab]"
                   }`}
                 >
@@ -179,33 +170,33 @@ export default function CatalogGrid({
               ))}
             </div>
 
-            {/* Right: Sort, Condition Grade & Currency controls */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 justify-end">
+            {/* Bottom Row: Sort, Grade, Guide, Currency (Grid on mobile, flex on desktop) */}
+            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-between gap-2 text-xs font-mono">
               {/* Sort Dropdown */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab]">
+              <div className="relative flex items-center gap-1 px-3 py-2 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab] min-h-[42px]">
                 <ArrowUpDown className="w-3.5 h-3.5 text-[#d4af37] shrink-0" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-transparent text-xs text-[#f8f6f0] focus:outline-none cursor-pointer pr-1"
+                  className="w-full bg-transparent text-xs text-[#f8f6f0] focus:outline-none cursor-pointer pr-1"
                 >
-                  <option value="default" className="bg-[#14100c]">Default Order</option>
-                  <option value="price_asc" className="bg-[#14100c]">Price: Low to High</option>
-                  <option value="price_desc" className="bg-[#14100c]">Price: High to Low</option>
+                  <option value="default" className="bg-[#14100c]">Sort: Default</option>
+                  <option value="price_asc" className="bg-[#14100c]">Price: Low → High</option>
+                  <option value="price_desc" className="bg-[#14100c]">Price: High → Low</option>
                   <option value="year_desc" className="bg-[#14100c]">Year: Newest First</option>
                   <option value="year_asc" className="bg-[#14100c]">Year: Ancient First</option>
                 </select>
               </div>
 
               {/* Grade Filter Dropdown */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab]">
+              <div className="relative flex items-center gap-1 px-3 py-2 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab] min-h-[42px]">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-[#d4af37] shrink-0" />
                 <select
                   value={gradeFilter}
                   onChange={(e) => setGradeFilter(e.target.value)}
-                  className="bg-transparent text-xs text-[#f8f6f0] focus:outline-none cursor-pointer pr-1"
+                  className="w-full bg-transparent text-xs text-[#f8f6f0] focus:outline-none cursor-pointer pr-1"
                 >
-                  <option value="all" className="bg-[#14100c]">All Grades</option>
+                  <option value="all" className="bg-[#14100c]">Grade: All</option>
                   <option value="UNC" className="bg-[#14100c]">UNC (Uncirculated)</option>
                   <option value="AU" className="bg-[#14100c]">AU (About Unc)</option>
                   <option value="XF" className="bg-[#14100c]">XF (Extremely Fine)</option>
@@ -213,51 +204,28 @@ export default function CatalogGrid({
                 </select>
               </div>
 
-              {/* Grading Guide Trigger */}
+              {/* Grading Guide Button */}
               <button
+                type="button"
                 onClick={onOpenGradingGuide}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-xs text-[#f3e5ab] hover:border-[#d4af37] hover:bg-[#1a140e] transition-all shadow-sm"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab] hover:border-[#d4af37] hover:bg-[#1a140e] transition-all min-h-[42px]"
                 title="Learn about UNC, AU, XF, VF grading terms"
               >
                 <Award className="w-3.5 h-3.5 text-[#d4af37]" />
-                <span className="hidden sm:inline">Guide</span>
+                <span>Grading Guide</span>
               </button>
 
-              {/* Currency Picker Dropdown */}
-              <div ref={currencyPickerRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowCurrencyPicker((v) => !v)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-xs text-[#f3e5ab] hover:border-[#d4af37] transition-all shadow-sm"
-                >
-                  <FlagIcon code={currency} className="w-4 h-3 rounded-[2px]" />
-                  <span className="font-bold">{currency}</span>
-                  <ChevronDown className="w-3 h-3 text-[#d4af37]" />
-                </button>
-
-                {showCurrencyPicker && (
-                  <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-[#18130e] border border-[#d4af37]/40 shadow-2xl z-50 overflow-hidden py-1">
-                    {CURRENCY_OPTIONS.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => {
-                          setCurrency(c);
-                          setShowCurrencyPicker(false);
-                        }}
-                        className={`w-full px-3 py-2 text-xs flex items-center gap-2.5 transition-colors ${
-                          currency === c
-                            ? "bg-[#d4af37]/20 text-[#f3e5ab] font-bold"
-                            : "text-[#b8af9e] hover:bg-[#221b14] hover:text-[#f3e5ab]"
-                        }`}
-                      >
-                        <FlagIcon code={c} className="w-4 h-3 rounded-[2px]" />
-                        <span>{c}</span>
-                        {currency === c && <span className="ml-auto text-[#d4af37] font-bold">✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Currency Picker Button (Opens Finger-Friendly Mobile Bottom Sheet) */}
+              <button
+                type="button"
+                onClick={() => setShowCurrencyModal(true)}
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#0a0806] border border-[#d4af37]/25 text-[#f3e5ab] hover:border-[#d4af37] hover:bg-[#1a140e] transition-all min-h-[42px] font-bold"
+                title="Change display currency"
+              >
+                <FlagIcon code={currency} className="w-5 h-3.5 rounded-[2px]" />
+                <span>{currency}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-[#d4af37]" />
+              </button>
             </div>
           </div>
         </ScrollReveal>
@@ -295,6 +263,76 @@ export default function CatalogGrid({
           </div>
         )}
       </div>
+
+      {/* Mobile-Friendly Currency Selector Bottom Sheet / Modal */}
+      {showCurrencyModal && (
+        <div
+          className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => setShowCurrencyModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#14100c] border border-[#d4af37]/40 p-6 shadow-2xl space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#d4af37]/20">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-[#f8f6f0]">
+                  Select Currency (මුදල් ඒකකය)
+                </h3>
+                <p className="text-[11px] font-mono text-[#a69d8d]">
+                  Prices will convert automatically at live approximate bank rates.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCurrencyModal(false)}
+                className="p-2 rounded-full bg-[#201912] border border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-black transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Currency Options List */}
+            <div className="space-y-2">
+              {CURRENCY_OPTIONS.map((c) => {
+                const info = CURRENCY_NAMES[c];
+                const isSelected = currency === c;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      setCurrency(c);
+                      setShowCurrencyModal(false);
+                    }}
+                    className={`w-full p-3.5 rounded-2xl border transition-all flex items-center justify-between text-left min-h-[52px] ${
+                      isSelected
+                        ? "bg-[#d4af37]/20 border-[#d4af37] shadow-lg shadow-[#d4af37]/10 ring-1 ring-[#d4af37]/50"
+                        : "bg-[#18130e] border-[#d4af37]/15 hover:border-[#d4af37]/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <FlagIcon code={c} className="w-7 h-5 rounded-[3px] shadow-md" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold font-mono text-[#f8f6f0]">{c}</span>
+                          <span className="text-xs font-mono text-[#d4af37]">({info.symbol})</span>
+                        </div>
+                        <span className="text-[11px] text-[#a69d8d] block">{info.name}</span>
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <div className="w-6 h-6 rounded-full bg-[#d4af37] text-black flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
