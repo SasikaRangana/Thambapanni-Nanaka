@@ -130,10 +130,14 @@ export default function WishlistDrawer({ open, onClose }: WishlistDrawerProps) {
               </a>
 
               <button
-                onClick={clearAll}
-                className="w-full py-2 rounded-xl bg-transparent border border-[#d4af37]/20 text-[#a69d8d] text-xs font-mono hover:text-rose-300 hover:border-rose-600/30 transition-colors"
+                onClick={() => {
+                  clearAll();
+                  onClose();
+                }}
+                className="w-full py-2.5 rounded-xl bg-transparent border border-rose-600/30 text-rose-300/80 hover:text-rose-200 hover:bg-rose-950/40 text-xs font-mono transition-colors flex items-center justify-center gap-1.5"
               >
-                Clear All
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear All &amp; Close</span>
               </button>
             </div>
           )}
