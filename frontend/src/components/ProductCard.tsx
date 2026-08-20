@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { MessageCircle, ZoomIn, ShieldCheck, Images, Layers, Heart } from "lucide-react";
+import { MessageCircle, ZoomIn, ShieldCheck, Images, Layers, Heart, RefreshCw } from "lucide-react";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR } from "@/lib/api";
 import { useCurrency, formatConverted } from "@/lib/CurrencyContext";
@@ -22,6 +22,13 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
   const wishlisted = isInWishlist(item.id);
 
   const displayImage = images[hoverIndex] || primaryImage;
+  const isReverse = hoverIndex > 0;
+
+  const handleFlip = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (images.length <= 1) return;
+    setHoverIndex((prev) => (prev === 0 ? 1 : 0));
+  };
 
   return (
     <article className="group relative rounded-2xl bg-[#15110d] border border-[#d4af37]/20 hover:border-[#d4af37]/60 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#d4af37]/10">
@@ -65,6 +72,18 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
             </span>
           </div>
         </div>
+
+        {/* Quick Flip Front/Back Button (if 2+ images) */}
+        {images.length > 1 && (
+          <button
+            onClick={handleFlip}
+            className="absolute bottom-3 left-3 z-20 px-2.5 py-1.5 rounded-lg bg-black/80 hover:bg-[#d4af37] text-[#f3e5ab] hover:text-[#0c0a08] border border-[#d4af37]/40 text-[10px] font-mono font-semibold flex items-center gap-1.5 transition-all shadow-md"
+            title={isReverse ? "Show Front (Obverse)" : "Show Back (Reverse)"}
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>{isReverse ? "Back (Reverse)" : "Front (Obverse)"}</span>
+          </button>
+        )}
 
         {/* Wishlist Heart Button */}
         <button

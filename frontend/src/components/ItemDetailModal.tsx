@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   X,
@@ -17,11 +17,15 @@ import {
   Link2,
   Heart,
   Check,
+  Maximize2,
+  Minimize2,
+  HelpCircle,
 } from "lucide-react";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR, generateWhatsAppUrl } from "@/lib/api";
 import { useCurrency, formatConverted } from "@/lib/CurrencyContext";
 import { useWishlist } from "@/lib/WishlistContext";
+import GradingGuideModal from "./GradingGuideModal";
 
 interface ItemDetailModalProps {
   item: CurrencyItem | null;
@@ -33,6 +37,8 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
   const [loupePos, setLoupePos] = useState({ x: 50, y: 50 });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showGradingGuide, setShowGradingGuide] = useState(false);
   const { currency, convert, symbol, label } = useCurrency();
   const { addItem, removeItem, isInWishlist } = useWishlist();
 
@@ -84,10 +90,18 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
   const whatsappUrl = generateWhatsAppUrl(item);
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#14100c] border border-[#d4af37]/40 shadow-2xl p-6 sm:p-8 text-[#f8f6f0]">
         {/* Close & Share Buttons */}
         <div className="absolute top-5 right-5 flex items-center gap-2 z-20">
+          <button
+            onClick={() => setIsFullscreen(true)}
+            className="p-2.5 rounded-full bg-[#201912] border border-[#d4af37]/30 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-[#0c0a08] transition-colors"
+            title="View Fullscreen 4K Lightbox"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
           <button
             onClick={() => {
               const url = `${window.location.origin}/?item=${encodeURIComponent(item.itemCode)}`;
@@ -269,9 +283,15 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
               </h2>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-[#261e15] border border-[#d4af37]/40 text-xs font-mono text-[#f3e5ab]">
-                  Condition: <strong>{item.condition_grade}</strong>
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowGradingGuide(true)}
+                  className="px-3 py-1 rounded-full bg-[#261e15] hover:bg-[#32281c] border border-[#d4af37]/40 text-xs font-mono text-[#f3e5ab] flex items-center gap-1.5 transition-colors cursor-pointer group/grade"
+                  title="Click to view condition grading scale guide"
+                >
+                  <span>Condition: <strong>{item.condition_grade}</strong></span>
+                  <HelpCircle className="w-3.5 h-3.5 text-[#d4af37] opacity-70 group-hover/grade:opacity-100" />
+                </button>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider ${
                     item.is_sold
@@ -360,5 +380,92 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
         </div>
       </div>
     </div>
+
+    {/* Fullscreen 4K Darkroom Lightbox Mode */}
+    {isFullscreen && (
+      <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col justify-between p-4 sm:p-8 animate-in fade-in duration-200 select-none">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between text-white z-20">
+          <div>
+            <span className="text-xs font-mono text-[#d4af37] uppercase tracking-wider block">
+              {item.itemCode} • {item.condition_grade}
+            </span>
+            <h3 className="font-serif text-lg font-bold text-[#f8f6f0] truncate max-w-xl">
+              {item.title}
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-[#a69d8d] hidden sm:inline">
+              Photo {activeImageIndex + 1} of {images.length} (ESC to exit)
+            </span>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="p-3 rounded-full bg-[#1c1711] border border-[#d4af37]/40 text-[#f3e5ab] hover:bg-[#d4af37] hover:text-black transition-colors"
+              title="Exit Fullscreen"
+            >
+              <Minimize2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Main Large Image Display */}
+        <div className="relative flex-1 w-full my-4 flex items-center justify-center">
+          <div className="relative w-full h-full max-h-[82vh]">
+            <Image
+              src={currentImage}
+              alt={item.title}
+              fill
+              sizes="100vw"
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* Arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={handlePrevImage}
+                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 p-3.5 rounded-full bg-black/80 hover:bg-[#d4af37] text-white hover:text-black transition-all border border-[#d4af37]/40 shadow-2xl"
+                title="Previous photo"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={handleNextImage}
+                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 p-3.5 rounded-full bg-black/80 hover:bg-[#d4af37] text-white hover:text-black transition-all border border-[#d4af37]/40 shadow-2xl"
+                title="Next photo"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Bottom Thumbnails */}
+        {images.length > 1 && (
+          <div className="flex items-center justify-center gap-3 z-20 overflow-x-auto py-2">
+            {images.map((imgUrl, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveImageIndex(idx)}
+                className={`relative w-20 sm:w-24 aspect-[16/9] rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-black ${
+                  idx === activeImageIndex
+                    ? "border-[#d4af37] scale-110 shadow-lg"
+                    : "border-[#d4af37]/20 opacity-60 hover:opacity-100"
+                }`}
+              >
+                <Image src={imgUrl} alt={`Thumbnail ${idx + 1}`} fill className="object-contain p-1" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* Grading Guide Modal */}
+    <GradingGuideModal open={showGradingGuide} onClose={() => setShowGradingGuide(false)} />
+    </>
   );
 }
