@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import Marquee from "../components/Marquee";
 import Hero from "../components/Hero";
@@ -135,6 +135,25 @@ export default function StorefrontPage() {
       ? items.filter((it) => !it.is_sold)
       : items.filter((it) => it.is_sold);
 
+  // Click-outside listener for Currency Picker
+  const currencyPickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        currencyPickerRef.current &&
+        !currencyPickerRef.current.contains(event.target as Node)
+      ) {
+        setShowCurrencyPicker(false);
+      }
+    };
+    if (showCurrencyPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCurrencyPicker]);
+
   // Clear URL param when modal closes
   const handleCloseModal = () => {
     setActiveDetailItem(null);
@@ -157,8 +176,8 @@ export default function StorefrontPage() {
         <SeriesCarousel onSelectSeries={handleSelectSeries} />
 
         {/* Stock Filter Toggle + Currency Selector — above catalog */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#120f0c]/60 p-2 sm:p-2.5 rounded-2xl border border-[#d4af37]/20 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 relative z-30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#120f0c]/90 p-2 sm:p-2.5 rounded-2xl border border-[#d4af37]/20 backdrop-blur-md">
             {/* Available / Sold Toggle */}
             <div className="flex items-center w-full sm:w-auto rounded-xl bg-[#0e0c09] border border-[#d4af37]/20 p-1">
               {(["all", "available", "sold"] as const).map((f) => (
@@ -188,8 +207,9 @@ export default function StorefrontPage() {
                 <span className="sm:hidden">Grades</span>
               </button>
 
-              <div className="relative">
+              <div ref={currencyPickerRef} className="relative">
                 <button
+                  type="button"
                   onClick={() => setShowCurrencyPicker((v) => !v)}
                   className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#0e0c09] border border-[#d4af37]/25 text-xs font-mono text-[#f3e5ab] hover:border-[#d4af37] transition-all shadow-sm"
                 >
@@ -278,14 +298,6 @@ export default function StorefrontPage() {
         open={showGradingGuide}
         onClose={() => setShowGradingGuide(false)}
       />
-
-      {/* Close currency picker on outside click */}
-      {showCurrencyPicker && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowCurrencyPicker(false)}
-        />
-      )}
     </div>
   );
 }
