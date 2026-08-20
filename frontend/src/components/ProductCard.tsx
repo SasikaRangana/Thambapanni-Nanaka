@@ -25,24 +25,21 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
 
   return (
     <article className="group relative rounded-2xl bg-[#15110d] border border-[#d4af37]/20 hover:border-[#d4af37]/60 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#d4af37]/10">
-      {/* Media Box — 16:9 landscape ratio, object-contain so full note is visible */}
+      {/* Media Box — Beautiful filled card presentation */}
       <div
-        className="relative w-full aspect-[16/9] bg-[#090806] overflow-hidden cursor-pointer"
+        className="relative w-full h-56 bg-[#16120e] overflow-hidden cursor-pointer"
         onClick={() => onOpenDetail(item)}
       >
-        {/* Subtle inner glow frame */}
-        <div className="absolute inset-0 shadow-[inset_0_0_24px_rgba(0,0,0,0.7)] z-10 pointer-events-none rounded-t-2xl" />
-
         <Image
           src={displayImage}
           alt={item.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-contain p-2 group-hover:scale-[1.03] transition-transform duration-500"
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
 
         {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#15110d] to-transparent pointer-events-none z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#15110d] to-transparent pointer-events-none z-10" />
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-20">

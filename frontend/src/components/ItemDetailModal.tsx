@@ -119,9 +119,9 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Interactive Loupe High-Res Image & Multi-Image Gallery */}
           <div className="lg:col-span-6 space-y-4">
-            {/* Main Image Loupe Viewport */}
+            {/* Main Image Loupe Viewport — Wide Horizontal Aspect Ratio & Full View */}
             <div
-              className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#0c0a08] md:cursor-crosshair group shadow-inner"
+              className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border-2 border-[#d4af37]/40 bg-[#080604] md:cursor-crosshair group shadow-inner"
               onMouseEnter={() => setLoupeActive(true)}
               onMouseLeave={() => setLoupeActive(false)}
               onMouseMove={handleMouseMove}
@@ -130,15 +130,15 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
                 src={currentImage}
                 alt={`${item.title} — View ${activeImageIndex + 1}`}
                 fill
-                sizes="(max-width: 768px) 100vw, 500px"
-                className="object-cover transition-opacity duration-300"
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-contain p-2 transition-opacity duration-300"
                 priority
               />
 
               {/* Magnifier Circle (Interactive 3.5x Loupe) */}
               {loupeActive && (
                 <div
-                  className="absolute w-36 h-36 rounded-full border-2 border-[#d4af37] pointer-events-none shadow-2xl overflow-hidden -translate-x-1/2 -translate-y-1/2 bg-black z-30"
+                  className="absolute w-40 h-40 rounded-full border-2 border-[#d4af37] pointer-events-none shadow-2xl overflow-hidden -translate-x-1/2 -translate-y-1/2 bg-[#080604] z-30 ring-2 ring-[#d4af37]/40"
                   style={{ left: `${loupePos.x}%`, top: `${loupePos.y}%` }}
                 >
                   <div
@@ -152,7 +152,7 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
                       src={currentImage}
                       alt="Zoomed High-Res Detail"
                       fill
-                      className="object-cover"
+                      className="object-contain p-2"
                     />
                   </div>
                 </div>
@@ -221,7 +221,7 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
                         key={idx}
                         type="button"
                         onClick={() => setActiveImageIndex(idx)}
-                        className={`group/thumb relative aspect-[4/3] rounded-xl overflow-hidden border-2 transition-all text-left bg-black ${
+                        className={`group/thumb relative aspect-[16/9] rounded-xl overflow-hidden border-2 transition-all text-left bg-[#080604] ${
                           isSelected
                             ? "border-[#d4af37] ring-2 ring-[#d4af37]/50 scale-[1.03] shadow-lg shadow-[#d4af37]/20"
                             : "border-[#d4af37]/20 hover:border-[#d4af37]/60 opacity-70 hover:opacity-100"
@@ -232,7 +232,7 @@ export default function ItemDetailModal({ item, onClose }: ItemDetailModalProps)
                           alt={`${item.title} thumbnail ${idx + 1}`}
                           fill
                           sizes="120px"
-                          className="object-cover"
+                          className="object-contain p-1"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90" />
                         <span className="absolute bottom-1 left-1.5 right-1.5 text-[9px] font-mono text-white truncate font-medium">
