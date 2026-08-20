@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Sparkles, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { Sparkles, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import { CurrencyItem, CategoryType } from "../lib/types";
 import ProductCard from "./ProductCard";
 import ScrollReveal from "./ScrollReveal";
@@ -9,14 +9,18 @@ import ScrollReveal from "./ScrollReveal";
 interface CatalogGridProps {
   items: CurrencyItem[];
   selectedCategory: CategoryType;
+  activeSeries?: string;
   onSelectCategory: (cat: CategoryType) => void;
+  onClearSeries?: () => void;
   onOpenDetail: (item: CurrencyItem) => void;
 }
 
 export default function CatalogGrid({
   items,
   selectedCategory,
+  activeSeries,
   onSelectCategory,
+  onClearSeries,
   onOpenDetail,
 }: CatalogGridProps) {
   const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "year_desc" | "year_asc">("default");
@@ -56,9 +60,24 @@ export default function CatalogGrid({
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#f8f6f0] mt-1.5">
                 Verified Historical Collection
               </h2>
-              <p className="text-xs sm:text-sm text-[#b8af9e] mt-1 font-mono">
-                Displaying {filteredItems.length} authenticated Ceylon banknotes and ancient coins
-              </p>
+              {activeSeries && activeSeries !== "all" ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-[#f3e5ab] font-mono bg-[#d4af37]/15 border border-[#d4af37]/40 px-3 py-1 rounded-full">
+                    Series: {activeSeries}
+                  </span>
+                  <button
+                    onClick={onClearSeries}
+                    className="text-[#a69d8d] hover:text-[#d4af37] transition-colors"
+                    title="Clear series filter"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs sm:text-sm text-[#b8af9e] mt-1 font-mono">
+                  Displaying {filteredItems.length} authenticated Ceylon banknotes and ancient coins
+                </p>
+              )}
             </div>
 
             {/* Category Filter Chips */}
@@ -157,6 +176,7 @@ export default function CatalogGrid({
                 onSelectCategory("all");
                 setGradeFilter("all");
                 setSortBy("default");
+                onClearSeries?.();
               }}
               className="mt-6 px-6 py-2.5 rounded-xl bg-[#d4af37] text-[#0c0a08] text-xs font-semibold uppercase tracking-wider"
             >

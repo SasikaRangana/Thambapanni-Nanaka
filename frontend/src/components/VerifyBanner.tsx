@@ -68,18 +68,18 @@ export default function VerifyBanner({ onOpenDetail }: VerifyBannerProps) {
 
               {/* Right Search Box & Result */}
               <div className="lg:col-span-6 space-y-4">
-                <form onSubmit={handleVerify} className="flex gap-2">
+                <form onSubmit={handleVerify} className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     placeholder="e.g. CEY-1979-2R, SL-1998-200R, 1954, or ta-001"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-xl bg-[#0d0b09] border border-[#d4af37]/40 text-sm text-[#f8f6f0] placeholder-[#6b6255] focus:outline-none focus:border-[#d4af37]"
+                    className="min-w-0 flex-1 px-4 py-3 rounded-xl bg-[#0d0b09] border border-[#d4af37]/40 text-sm text-[#f8f6f0] placeholder-[#6b6255] focus:outline-none focus:border-[#d4af37]"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-3 rounded-xl bg-[#d4af37] text-[#0c0a08] font-semibold text-sm hover:bg-[#e5c158] transition-colors flex items-center gap-2 shrink-0"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#d4af37] text-[#0c0a08] font-semibold text-sm hover:bg-[#e5c158] transition-colors flex items-center justify-center gap-2 shrink-0"
                   >
                     <Search className="w-4 h-4" />
                     <span>{loading ? "Checking…" : "Verify"}</span>

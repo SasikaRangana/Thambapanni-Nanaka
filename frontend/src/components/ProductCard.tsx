@@ -20,23 +20,27 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
 
   return (
     <article className="group relative rounded-2xl bg-[#15110d] border border-[#d4af37]/20 hover:border-[#d4af37]/60 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#d4af37]/10">
-      {/* Media Box */}
+      {/* Media Box — 16:9 landscape ratio, object-contain so full note is visible */}
       <div
-        className="relative w-full h-52 bg-[#0d0b09] overflow-hidden cursor-pointer"
+        className="relative w-full aspect-[16/9] bg-[#090806] overflow-hidden cursor-pointer"
         onClick={() => onOpenDetail(item)}
       >
+        {/* Subtle inner glow frame */}
+        <div className="absolute inset-0 shadow-[inset_0_0_24px_rgba(0,0,0,0.7)] z-10 pointer-events-none rounded-t-2xl" />
+
         <Image
           src={displayImage}
           alt={item.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-contain p-2 group-hover:scale-[1.03] transition-transform duration-500"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-[#15110d] via-transparent to-black/30 opacity-80" />
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#15110d] to-transparent pointer-events-none z-10" />
 
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-20">
           <span className="px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-[#d4af37]/40 text-[10px] font-mono font-semibold text-[#f3e5ab] uppercase tracking-wider">
             {item.itemCode}
           </span>
@@ -61,7 +65,7 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
         </div>
 
         {/* Loupe Hover Prompt */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px] z-20">
           <span className="px-4 py-2 rounded-full bg-[#1c1711] border border-[#d4af37] text-xs font-mono text-[#f3e5ab] flex items-center gap-2 shadow-xl">
             <ZoomIn className="w-3.5 h-3.5 text-[#d4af37]" />
             Inspect Loupe &amp; Gallery

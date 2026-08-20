@@ -10,6 +10,7 @@ export interface CurrencyItem {
   price: number;
   category: "banknote" | "coin" | "token" | "medal" | string;
   era?: "ancient" | "colonial" | "modern" | string;
+  series?: string;
   condition_grade: string;
   is_sold: boolean;
   imageUrl: string;
@@ -70,6 +71,7 @@ export interface CurrencyFilterState {
   category: CategoryType;
   era: EraType;
   search: string;
+  series?: string;
   minPrice?: number;
   maxPrice?: number;
   conditionGrade?: string;

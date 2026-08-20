@@ -22,15 +22,17 @@ import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 export default function StorefrontPage() {
   const [items, setItems] = useState<CurrencyItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
+  const [activeSeries, setActiveSeries] = useState<string>("");
   const [activeDetailItem, setActiveDetailItem] = useState<CurrencyItem | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const loadData = async (cat?: CategoryType, era?: string, search?: string) => {
+  const loadData = async (cat?: CategoryType, era?: string, search?: string, series?: string) => {
     setLoading(true);
     const res = await fetchCurrencies({
       category: cat || selectedCategory,
       era: era as any,
       search: search,
+      series: series,
     });
     setItems(res.items);
     setLoading(false);
@@ -42,10 +44,10 @@ export default function StorefrontPage() {
     setItems(cached);
 
     // 2. Fetch/filter
-    loadData(selectedCategory);
+    loadData(selectedCategory, undefined, undefined, activeSeries || undefined);
 
     const handleCatalogUpdate = () => {
-      loadData(selectedCategory);
+      loadData(selectedCategory, undefined, undefined, activeSeries || undefined);
     };
 
     if (typeof window !== "undefined") {
@@ -57,18 +59,23 @@ export default function StorefrontPage() {
         window.removeEventListener("thambapanni_catalog_updated", handleCatalogUpdate);
       }
     };
-  }, [selectedCategory]);
+  }, [selectedCategory, activeSeries]);
 
   const handleHeroSearch = (query: string, category: string, era: string) => {
+    setActiveSeries("");
     setSelectedCategory(category as CategoryType);
-    loadData(category as CategoryType, era, query);
+    loadData(category as CategoryType, era, query, undefined);
   };
 
-  const handleSelectSeries = (category: string, era?: string) => {
-    setSelectedCategory(category as CategoryType);
-    loadData(category as CategoryType, era);
-    const el = document.getElementById("collection");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+  const handleSelectSeries = (series: string) => {
+    setActiveSeries(series);
+    setSelectedCategory("all");
+    loadData("all", undefined, undefined, series);
+  };
+
+  const handleClearSeries = () => {
+    setActiveSeries("");
+    loadData(selectedCategory, undefined, undefined, undefined);
   };
 
   return (
@@ -82,11 +89,16 @@ export default function StorefrontPage() {
       <main className="flex-1">
         <Hero onSearch={handleHeroSearch} />
         <TrustPillars />
-        <SeriesCarousel onSelectCategory={handleSelectSeries} />
+        <SeriesCarousel onSelectSeries={handleSelectSeries} />
         <CatalogGrid
           items={items}
           selectedCategory={selectedCategory}
-          onSelectCategory={(cat) => setSelectedCategory(cat)}
+          activeSeries={activeSeries}
+          onSelectCategory={(cat) => {
+            setSelectedCategory(cat);
+            setActiveSeries("");
+          }}
+          onClearSeries={handleClearSeries}
           onOpenDetail={(item) => setActiveDetailItem(item)}
         />
         <VerifyBanner onOpenDetail={(item) => setActiveDetailItem(item)} />

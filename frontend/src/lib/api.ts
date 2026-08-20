@@ -60,6 +60,7 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
     const params = new URLSearchParams();
     if (filters?.category && filters.category !== "all") params.set("category", filters.category);
     if (filters?.search && filters.search.trim()) params.set("search", filters.search.trim());
+    if (filters?.series && filters.series !== "all") params.set("series", filters.series);
 
     const url = `/api/currencies${params.toString() ? "?" + params.toString() : ""}`;
     const res = await fetch(url, { cache: "no-store" });
@@ -81,6 +82,15 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
       // condition grade filter (client-side)
       if (filters?.conditionGrade && filters.conditionGrade !== "all") {
         items = items.filter(it => it.condition_grade.toLowerCase().includes(filters.conditionGrade!.toLowerCase()));
+      }
+
+      // series filter (client-side fallback)
+      if (filters?.series && filters.series !== "all") {
+        const s = filters.series.toLowerCase();
+        items = items.filter(it =>
+          (it.series && it.series.toLowerCase().includes(s)) ||
+          it.title.toLowerCase().includes(s)
+        );
       }
 
       if (items.length > 0) {
@@ -122,6 +132,13 @@ export async function fetchCurrencies(filters?: Partial<CurrencyFilterState>): P
         it.country.toLowerCase().includes(q) ||
         String(it.year).includes(q) ||
         (it.description && it.description.toLowerCase().includes(q))
+    );
+  }
+  if (filters?.series && filters.series !== "all") {
+    const s = filters.series.toLowerCase();
+    filtered = filtered.filter((it) =>
+      (it.series && it.series.toLowerCase().includes(s)) ||
+      it.title.toLowerCase().includes(s)
     );
   }
   if (filters?.sortBy === "price_asc") filtered.sort((a, b) => a.price - b.price);

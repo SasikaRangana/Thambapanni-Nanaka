@@ -27,6 +27,7 @@ import {
 import { DEFAULT_CURRENCIES } from "@/data/mockCurrencies";
 import { CurrencyItem, getItemImages } from "@/lib/types";
 import { formatLKR, fetchCurrencies, API_BASE, getLocalCurrencies, saveLocalCurrencies } from "@/lib/api";
+import AdminLoginGate from "@/components/AdminLoginGate";
 
 const PRESET_TEMPLATES = [
   {
@@ -176,44 +177,25 @@ const CONDITION_GRADES = [
   "Crisp UNC Set",
 ];
 
-const DEFAULT_ADMIN_TOKEN = "thambapanni_super_secret_admin_token_2026";
-
 export default function AdminPage() {
   const [items, setItems] = useState<CurrencyItem[]>([]);
-  const [adminToken, setAdminToken] = useState("");
 
   // Load items: always fetch fresh from server (Supabase-backed API route)
   React.useEffect(() => {
-    // Load stored token if saved
-    if (typeof window !== "undefined") {
-      const savedToken = localStorage.getItem("thambapanni_admin_token") || DEFAULT_ADMIN_TOKEN;
-      setAdminToken(savedToken);
-    }
-
     // Fetch from server route (Supabase) — authoritative source
     fetchCurrencies().then((res) => {
       if (res.items && res.items.length > 0) {
         setItems(res.items);
         saveLocalCurrencies(res.items);
       } else {
-        // Fallback to local cache only if server returns empty
         const cached = getLocalCurrencies();
         if (cached.length > 0) setItems(cached);
       }
     }).catch(() => {
-      // Network failure: use local cache
       const cached = getLocalCurrencies();
       if (cached.length > 0) setItems(cached);
     });
   }, []);
-
-
-  const handleTokenChange = (val: string) => {
-    setAdminToken(val);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("thambapanni_admin_token", val);
-    }
-  };
 
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -522,6 +504,7 @@ export default function AdminPage() {
   };
 
   return (
+    <AdminLoginGate>
     <div className="min-h-screen bg-[#0c0a08] text-[#f8f6f0] p-6 lg:p-10 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Top Header Navigation */}
@@ -555,13 +538,6 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="password"
-              placeholder="Admin API Secret Token"
-              value={adminToken}
-              onChange={(e) => handleTokenChange(e.target.value)}
-              className="px-3.5 py-2 rounded-xl bg-[#14100c] border border-[#d4af37]/30 text-xs text-[#f8f6f0] focus:outline-none focus:border-[#d4af37]"
-            />
             <button
               onClick={() => {
                 if (confirm("Are you sure you want to clear all catalog items? This will remove all items from the view.")) {
@@ -1078,5 +1054,6 @@ export default function AdminPage() {
         )}
       </div>
     </div>
+    </AdminLoginGate>
   );
 }
