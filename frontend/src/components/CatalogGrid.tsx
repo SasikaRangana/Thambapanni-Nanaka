@@ -129,12 +129,12 @@ export default function CatalogGrid({
                 )}
               </div>
 
-              {/* Category Filter Pills (Banknote, Coin with on/off toggle) */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              {/* Category Filter Pills (Banknote, Coin with on/off toggle) - Centered on Mobile */}
+              <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0">
                 <button
                   type="button"
                   onClick={() => onSelectCategory(selectedCategory === "banknote" ? "all" : "banknote")}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[38px] flex items-center gap-1.5 ${
+                  className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] sm:min-h-[38px] flex items-center justify-center gap-1.5 text-center ${
                     selectedCategory === "banknote"
                       ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
                       : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
@@ -148,7 +148,7 @@ export default function CatalogGrid({
                 <button
                   type="button"
                   onClick={() => onSelectCategory(selectedCategory === "coin" ? "all" : "coin")}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[38px] flex items-center gap-1.5 ${
+                  className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] sm:min-h-[38px] flex items-center justify-center gap-1.5 text-center ${
                     selectedCategory === "coin"
                       ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
                       : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
