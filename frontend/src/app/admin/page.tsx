@@ -44,6 +44,7 @@ const PRESET_TEMPLATES = [
       year: 1979,
       price: 9500,
       category: "banknote",
+      series: "Sri Lankan Flora and Fauna Series (1979)",
       condition_grade: "UNC (Uncirculated)",
       imageUrl: "/images/note_2_ceylon_fauna_1979.jpg",
       images: [
@@ -63,6 +64,7 @@ const PRESET_TEMPLATES = [
       year: 1998,
       price: 18500,
       category: "banknote",
+      series: "Commemorative Notes & Special Editions",
       condition_grade: "UNC (Uncirculated)",
       imageUrl: "/images/note_200_temple_tooth_1998.jpg",
       images: [
@@ -82,6 +84,7 @@ const PRESET_TEMPLATES = [
       year: 1954,
       price: 145000,
       category: "banknote",
+      series: "Queen Elizabeth II Series (1952–1954)",
       condition_grade: "Extremely Fine (XF)",
       imageUrl: "/images/note_100_ceylon_qeii.jpg",
       images: [
@@ -101,6 +104,7 @@ const PRESET_TEMPLATES = [
       year: 1982,
       price: 8500,
       category: "banknote",
+      series: "Sri Lanka Historical and Archaeological Series (1981–1985)",
       condition_grade: "UNC (Uncirculated)",
       imageUrl: "/images/note_10_ceylon_1982.jpg",
       images: [
@@ -119,6 +123,7 @@ const PRESET_TEMPLATES = [
       year: 1954,
       price: 135000,
       category: "banknote",
+      series: "Queen Elizabeth II Series (1952–1954)",
       condition_grade: "Very Fine (VF+)",
       imageUrl: "/images/note_100_sigiriya_frescoes.jpg",
       images: [
@@ -137,6 +142,7 @@ const PRESET_TEMPLATES = [
       year: 1153,
       price: 125000,
       category: "coin",
+      series: "Ancient & Medieval Ceylon Coinage",
       condition_grade: "Extremely Fine (XF)",
       imageUrl: "/images/note_200_temple_tooth_1998.jpg",
       images: [
@@ -155,6 +161,7 @@ const PRESET_TEMPLATES = [
       year: 1941,
       price: 6500,
       category: "coin",
+      series: "British Ceylon Imperial Coinage",
       condition_grade: "About Uncirculated (AU)",
       imageUrl: "/images/note_10_ceylon_1982.jpg",
       images: [
@@ -176,6 +183,25 @@ const CONDITION_GRADES = [
   "Very Good (VG)",
   "Good (G)",
   "Crisp UNC Set",
+];
+
+export const CEYLON_SERIES_OPTIONS = [
+  "Government of Ceylon (Pre-Central Bank)",
+  "Emergency WWII Fractional Uniface (1942)",
+  "George VI Pictorial Series",
+  "Queen Elizabeth II Series (1952–1954)",
+  "Ceylon Armorial Ensign Series (1956–1977)",
+  "S.W.R.D Bandaranayake Series (1961–1975)",
+  "King Parakrama Bahu Series (1965–1977)",
+  "Sri Lankan Flora and Fauna Series (1979)",
+  "Sri Lanka Historical and Archaeological Series (1981–1985)",
+  "Sri Lanka Historical and Development Series (1987–1990)",
+  "Sri Lankan Heritage Series (1991–2006)",
+  "Development, Prosperity & Dancers Series (2010–2017)",
+  "Commemorative Notes & Special Editions",
+  "Ancient & Medieval Ceylon Coinage",
+  "Dutch VOC & Colonial Ceylon Coinage",
+  "British Ceylon Imperial Coinage",
 ];
 
 export default function AdminPage() {
@@ -214,6 +240,7 @@ export default function AdminPage() {
     year: 1980,
     price: 15000,
     category: "banknote",
+    series: "",
     condition_grade: "UNC (Uncirculated)",
     imageUrl: "/images/note_200_temple_tooth_1998.jpg",
     images: ["/images/note_200_temple_tooth_1998.jpg"],
@@ -239,6 +266,7 @@ export default function AdminPage() {
         year: preset.year,
         price: preset.price,
         category: preset.category,
+        series: (preset as any).series || "",
         condition_grade: preset.condition_grade,
         imageUrl: preset.imageUrl,
         images: presetImages,
@@ -435,6 +463,7 @@ export default function AdminPage() {
       year: Number(formData.year),
       price: Number(formData.price),
       category: formData.category,
+      series: formData.series?.trim() || undefined,
       condition_grade: formData.condition_grade,
       imageUrl: finalImages[0],
       images: finalImages,
@@ -461,6 +490,7 @@ export default function AdminPage() {
           year: tempItem.year,
           price: tempItem.price,
           category: tempItem.category,
+          series: tempItem.series,
           condition_grade: tempItem.condition_grade,
           imageUrl: finalImages[0],
           images: finalImages,
@@ -487,8 +517,6 @@ export default function AdminPage() {
     }
   };
 
-
-
   const resetFormData = () => {
     setFormData({
       title: "",
@@ -497,6 +525,7 @@ export default function AdminPage() {
       year: 1980,
       price: 15000,
       category: "banknote",
+      series: "",
       condition_grade: "UNC (Uncirculated)",
       imageUrl: "/images/note_200_temple_tooth_1998.jpg",
       images: ["/images/note_200_temple_tooth_1998.jpg"],
@@ -606,6 +635,7 @@ export default function AdminPage() {
                   year: 1980,
                   price: 15000,
                   category: "banknote",
+                  series: "",
                   condition_grade: "UNC (Uncirculated)",
                   imageUrl: "/images/note_200_temple_tooth_1998.jpg",
                   images: ["/images/note_200_temple_tooth_1998.jpg"],
@@ -1037,7 +1067,29 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* 6. Condition Grade Dropdown */}
+                {/* 6. Historical Series Selector Dropdown */}
+                <div>
+                  <label className="block text-[#a69d8d] mb-1">
+                    Historical Series / Collection (කාණ්ඩය / Series)
+                  </label>
+                  <select
+                    value={formData.series}
+                    onChange={(e) => setFormData({ ...formData, series: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0b09] border border-[#d4af37]/30 text-white focus:outline-none focus:border-[#d4af37]"
+                  >
+                    <option value="">-- Select Historical Ceylon Series (Optional) --</option>
+                    {CEYLON_SERIES_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        🏛️ {s}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-[#8c8273] mt-1 font-mono">
+                    Selecting a series links this banknote/coin to the storefront Series Carousel and filters.
+                  </p>
+                </div>
+
+                {/* 7. Condition Grade Dropdown */}
                 <div>
                   <label className="block text-[#a69d8d] mb-1">
                     Condition Grade (තත්ත්ව ශ්‍රේණිය)
