@@ -129,37 +129,34 @@ export default function CatalogGrid({
                 )}
               </div>
 
-              {/* Category Pills (Banknote, Coin, All) */}
+              {/* Category Filter Pills (Banknote, Coin with on/off toggle) */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 <button
-                  onClick={() => onSelectCategory("all")}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
-                    selectedCategory === "all"
-                      ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
-                      : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
-                  }`}
-                >
-                  All Collectibles
-                </button>
-                <button
-                  onClick={() => onSelectCategory("banknote")}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
+                  type="button"
+                  onClick={() => onSelectCategory(selectedCategory === "banknote" ? "all" : "banknote")}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[38px] flex items-center gap-1.5 ${
                     selectedCategory === "banknote"
                       ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
                       : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
                   }`}
+                  title={selectedCategory === "banknote" ? "Click to show all categories" : "Filter banknotes only"}
                 >
-                  💵 Banknotes (නෝට්ටු)
+                  <span>💵 Banknotes (නෝට්ටු)</span>
+                  {selectedCategory === "banknote" && <X className="w-3.5 h-3.5 ml-0.5" />}
                 </button>
+
                 <button
-                  onClick={() => onSelectCategory("coin")}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[40px] ${
+                  type="button"
+                  onClick={() => onSelectCategory(selectedCategory === "coin" ? "all" : "coin")}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all touch-manipulation min-h-[38px] flex items-center gap-1.5 ${
                     selectedCategory === "coin"
                       ? "bg-[#d4af37] text-[#0c0a08] shadow-lg shadow-[#d4af37]/20 font-bold"
                       : "bg-[#18130e] text-[#d4cdbf] border border-[#d4af37]/25 hover:border-[#d4af37]/60 active:scale-95"
                   }`}
+                  title={selectedCategory === "coin" ? "Click to show all categories" : "Filter coins only"}
                 >
-                  🪙 Coins (කාසි)
+                  <span>🪙 Coins (කාසි)</span>
+                  {selectedCategory === "coin" && <X className="w-3.5 h-3.5 ml-0.5" />}
                 </button>
               </div>
             </div>
