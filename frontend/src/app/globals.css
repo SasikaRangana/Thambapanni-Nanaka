@@ -81,21 +81,32 @@
   z-index: 15;
 }
 
-.group:hover .gold-shimmer-media::after {
-  animation: goldShimmer 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+.group:hover .gold-shimmer-media::after,
+.group:active .gold-shimmer-media::after,
+.gold-shimmer-media:active::after {
+  animation: goldShimmer 1.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* On mobile touch devices without hover, run a gentle luxury shimmer periodically */
+@media (hover: none) and (pointer: coarse) {
+  .gold-shimmer-media::after {
+    animation: goldShimmer 4.5s ease-in-out infinite;
+  }
 }
 
 .luxury-card-glow {
   position: relative;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.luxury-card-glow:hover {
-  border-color: rgba(212, 175, 55, 0.7) !important;
+.luxury-card-glow:hover,
+.luxury-card-glow:active {
+  border-color: rgba(212, 175, 55, 0.75) !important;
   box-shadow: 
     0 22px 45px -12px rgba(0, 0, 0, 0.95),
-    0 0 30px -5px rgba(212, 175, 55, 0.28),
-    inset 0 1px 1px 0 rgba(243, 229, 171, 0.2);
+    0 0 32px -4px rgba(212, 175, 55, 0.32),
+    inset 0 1px 1px 0 rgba(243, 229, 171, 0.25);
 }
 
 /* ================= Scroll Reveal Animations ================= */

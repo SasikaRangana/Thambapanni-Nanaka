@@ -31,7 +31,7 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
   };
 
   return (
-    <article className="group relative rounded-2xl bg-[#15110d] border border-[#d4af37]/25 hover:border-[#d4af37]/70 overflow-hidden flex flex-col justify-between transition-all duration-400 hover:-translate-y-2 luxury-card-glow">
+    <article className="group relative rounded-2xl bg-[#15110d] border border-[#d4af37]/25 hover:border-[#d4af37]/70 active:border-[#d4af37] overflow-hidden flex flex-col justify-between transition-all duration-300 hover:-translate-y-2 active:scale-[0.985] luxury-card-glow touch-manipulation">
       {/* Media Box — Beautiful filled card presentation with Royal Gold Shimmer Sweep */}
       <div
         className="relative w-full h-56 bg-[#16120e] overflow-hidden cursor-pointer gold-shimmer-media"
@@ -42,11 +42,11 @@ export default function ProductCard({ item, onOpenDetail }: ProductCardProps) {
           alt={item.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-cover group-hover:scale-105 group-active:scale-105 transition-transform duration-500"
         />
 
-        {/* Ambient Subtle Radial Glow behind note */}
-        <div className="absolute inset-0 bg-radial from-[#d4af37]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        {/* Ambient Subtle Radial Glow behind note (Triggers on hover & mobile tap) */}
+        <div className="absolute inset-0 bg-radial from-[#d4af37]/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#15110d] to-transparent pointer-events-none z-10" />
