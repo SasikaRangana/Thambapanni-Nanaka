@@ -46,6 +46,58 @@
   animation: pulseGlow 4s ease-in-out infinite;
 }
 
+/* ================= Royal Gilded Shimmer & Ambient Hover Glow ================= */
+@keyframes goldShimmer {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  50%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.gold-shimmer-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-shimmer-media::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.05) 20%,
+    rgba(243, 229, 171, 0.25) 50%,
+    rgba(212, 175, 55, 0.05) 80%,
+    transparent 100%
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  pointer-events: none;
+  z-index: 15;
+}
+
+.group:hover .gold-shimmer-media::after {
+  animation: goldShimmer 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.luxury-card-glow {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card-glow:hover {
+  border-color: rgba(212, 175, 55, 0.7) !important;
+  box-shadow: 
+    0 22px 45px -12px rgba(0, 0, 0, 0.95),
+    0 0 30px -5px rgba(212, 175, 55, 0.28),
+    inset 0 1px 1px 0 rgba(243, 229, 171, 0.2);
+}
+
 /* ================= Scroll Reveal Animations ================= */
 .scroll-reveal {
   opacity: 0;
