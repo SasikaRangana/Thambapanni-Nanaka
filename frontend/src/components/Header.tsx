@@ -36,13 +36,27 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Lock body scroll and intercept back button when mobile menu is open
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      if (typeof window !== "undefined") {
+        window.history.pushState({ tn_mobile_menu: true }, "");
+      }
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    const handlePopState = () => {
+      setMobileMenuOpen(false);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [mobileMenuOpen]);
 
   const whatsappDirect = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(
     "Hello Thambapanni Nanaka team, I would like to inquire about your historical currency and banknote collection."
@@ -161,9 +175,9 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Modal Popup with Backdrop */}
+      {/* Mobile Modal Popup with Backdrop - Always 100% Viewport Centered */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] md:hidden flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 h-[100dvh] w-screen">
           {/* Backdrop Click Area */}
           <div 
             className="absolute inset-0" 
@@ -171,7 +185,7 @@ export default function Header() {
           />
 
           {/* Modal Container */}
-          <div className="relative w-full max-w-sm rounded-3xl bg-[#14100c]/98 border border-[#d4af37]/40 shadow-2xl p-5 text-sm font-medium z-10 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-3xl bg-[#14100c] border border-[#d4af37]/40 shadow-2xl p-5 text-sm font-medium z-10 animate-in zoom-in-95 duration-200 scrollbar-none my-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#d4af37]/20">
               <div className="flex items-center gap-2">
