@@ -25,7 +25,7 @@ interface CatalogGridProps {
 }
 
 const CURRENCY_NAMES: Record<CurrencyCode, { name: string; symbol: string }> = {
-  LKR: { name: "Sri Lankan Rupee (ශ්‍රී ලංකා රුපියල්)", symbol: "Rs." },
+  LKR: { name: "Sri Lankan Rupee", symbol: "Rs." },
   USD: { name: "United States Dollar", symbol: "$" },
   GBP: { name: "British Pound Sterling", symbol: "£" },
   EUR: { name: "European Union Euro", symbol: "€" },
@@ -291,7 +291,7 @@ export default function CatalogGrid({
             <div className="flex items-center justify-between pb-3 border-b border-[#d4af37]/20">
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#f8f6f0]">
-                  Select Currency (මුදල් ඒකකය)
+                  Select Currency
                 </h3>
                 <p className="text-[11px] font-mono text-[#a69d8d]">
                   Prices will convert automatically at live approximate bank rates.
